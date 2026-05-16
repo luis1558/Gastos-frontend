@@ -44,9 +44,9 @@ export function DebtDetailPage() {
 
   if (!debt) {
     return (
-      <Card>
-        <p className="text-center py-8 text-gray-500">Deuda no encontrada</p>
-      </Card>
+        <Card>
+          <p className="text-gray-500 dark:text-gray-400 text-center py-8">Deuda no encontrada</p>
+        </Card>
     )
   }
 
@@ -56,29 +56,29 @@ export function DebtDetailPage() {
 
   return (
     <div>
-      <Link to={ROUTES.DEBTS} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4">
+      <Link to={ROUTES.DEBTS} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4 dark:text-gray-400 dark:hover:text-gray-300">
         <FiArrowLeft size={16} /> Volver a deudas
       </Link>
 
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{debt.description}</h1>
-          <p className="text-gray-500 mt-1">{debt.counterparty_name}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{debt.description}</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">{debt.counterparty_name}</p>
         </div>
         <Badge color={statusColor}>{DEBT_STATUSES.find((s) => s.value === debt.status)?.label || debt.status}</Badge>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <Card>
-          <p className="text-sm text-gray-500">Monto Original</p>
-          <p className="text-xl font-bold text-gray-900">{formatCurrency(debt.original_amount)}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Monto Original</p>
+          <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(debt.original_amount)}</p>
         </Card>
         <Card>
-          <p className="text-sm text-gray-500">Pagado</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Pagado</p>
           <p className="text-xl font-bold text-green-600">{formatCurrency(paidAmount)}</p>
         </Card>
         <Card>
-          <p className="text-sm text-gray-500">Saldo Pendiente</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Saldo Pendiente</p>
           <p className={`text-xl font-bold ${remaining > 0 ? 'text-red-600' : 'text-green-600'}`}>
             {formatCurrency(Math.max(0, remaining))}
           </p>
@@ -86,26 +86,26 @@ export function DebtDetailPage() {
       </div>
 
       <Card className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Detalles</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Detalles</h2>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="text-gray-500">Tipo</p>
-            <p className="font-medium">{debt.type === 'receivable' ? 'Por cobrar' : 'Por pagar'}</p>
+            <p className="text-gray-500 dark:text-gray-400">Tipo</p>
+            <p className="font-medium dark:text-gray-200">{debt.type === 'receivable' ? 'Por cobrar' : 'Por pagar'}</p>
           </div>
           <div>
-            <p className="text-gray-500">Fecha de origen</p>
-            <p className="font-medium">{formatDate(debt.origin_date)}</p>
+            <p className="text-gray-500 dark:text-gray-400">Fecha de origen</p>
+            <p className="font-medium dark:text-gray-200">{formatDate(debt.origin_date)}</p>
           </div>
           {debt.due_date && (
             <div>
-              <p className="text-gray-500">Vencimiento</p>
-              <p className="font-medium">{formatDate(debt.due_date)}</p>
+              <p className="text-gray-500 dark:text-gray-400">Vencimiento</p>
+              <p className="font-medium dark:text-gray-200">{formatDate(debt.due_date)}</p>
             </div>
           )}
           {debt.notes && (
             <div className="col-span-2">
-              <p className="text-gray-500">Notas</p>
-              <p className="font-medium">{debt.notes}</p>
+              <p className="text-gray-500 dark:text-gray-400">Notas</p>
+              <p className="font-medium dark:text-gray-200">{debt.notes}</p>
             </div>
           )}
         </div>
@@ -113,7 +113,7 @@ export function DebtDetailPage() {
 
       <Card>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Pagos</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pagos</h2>
           {debt.status !== 'paid' && debt.status !== 'cancelled' && (
             <Button size="sm" onClick={() => setModalOpen(true)}>
               <FiPlus size={16} className="mr-1" /> Registrar Pago
@@ -124,17 +124,17 @@ export function DebtDetailPage() {
         {payments && payments.length > 0 ? (
           <div className="space-y-2">
             {payments.map((payment) => (
-              <div key={payment.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+              <div key={payment.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 dark:border-gray-700">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{payment.description || 'Pago'}</p>
-                  <p className="text-xs text-gray-500">{formatDate(payment.payment_date)}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{payment.description || 'Pago'}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(payment.payment_date)}</p>
                 </div>
                 <p className="font-semibold text-green-600">{formatCurrency(payment.amount)}</p>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-6">Sin pagos registrados</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center py-6">Sin pagos registrados</p>
         )}
       </Card>
 

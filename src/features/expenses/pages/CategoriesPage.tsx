@@ -96,13 +96,13 @@ export function CategoriesPage() {
                   style={{ backgroundColor: cat.color || '#6366f1' }}
                 />
                 <div>
-                  <p className="font-medium text-gray-900">{cat.name}</p>
-                  <p className="text-xs text-gray-500">{cat.slug}</p>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{cat.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{cat.slug}</p>
                 </div>
               </div>
               <button
                 onClick={() => openEdit(cat)}
-                className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors dark:hover:bg-indigo-900/30"
               >
                 <FiEdit2 size={16} />
               </button>

@@ -64,7 +64,7 @@ export function IncomesPage() {
         <select
           value={month}
           onChange={(e) => setMonth(Number(e.target.value))}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
         >
           {MONTH_NAMES.slice(1).map((name, i) => (
             <option key={i + 1} value={i + 1}>{name}</option>
@@ -73,7 +73,7 @@ export function IncomesPage() {
         <select
           value={year}
           onChange={(e) => setYear(Number(e.target.value))}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
         >
           {Array.from({ length: 5 }, (_, i) => getCurrentYear() - 2 + i).map((y) => (
             <option key={y} value={y}>{y}</option>
@@ -85,22 +85,22 @@ export function IncomesPage() {
         <Loading />
       ) : (
         <Card>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
             {MONTH_NAMES[month]} {year}
           </h2>
 
           {income && (
-            <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
               <div>
-                <p className="text-sm text-gray-500">Ingreso Base</p>
-                <p className="text-lg font-semibold text-gray-900">{formatCurrency(income.base_income)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Ingreso Base</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(income.base_income)}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Ingreso Extra</p>
-                <p className="text-lg font-semibold text-gray-900">{formatCurrency(income.extra_income)}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Ingreso Extra</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(income.extra_income)}</p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm text-gray-500">Total</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Total</p>
                 <p className="text-xl font-bold text-green-600">{formatCurrency(income.base_income + income.extra_income)}</p>
               </div>
             </div>

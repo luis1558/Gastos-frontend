@@ -46,7 +46,7 @@ export function LoginPage() {
         />
 
         {login.error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300">
             {login.error.message || 'Error al iniciar sesión'}
           </div>
         )}
@@ -56,9 +56,9 @@ export function LoginPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-500">
+      <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
         ¿No tienes cuenta?{' '}
-        <Link to={ROUTES.REGISTER} className="text-indigo-600 hover:text-indigo-500 font-medium">
+        <Link to={ROUTES.REGISTER} className="text-indigo-600 hover:text-indigo-500 font-medium dark:text-indigo-400 dark:hover:text-indigo-300">
           Registrarse
         </Link>
       </p>

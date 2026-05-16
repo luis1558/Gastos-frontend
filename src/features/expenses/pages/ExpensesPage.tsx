@@ -69,26 +69,26 @@ export function ExpensesPage() {
         }
       />
 
-      <div className="flex gap-2 mb-6">
-        <select
-          value={month}
-          onChange={(e) => setMonth(Number(e.target.value))}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
-        >
-          {MONTH_NAMES.slice(1).map((name, i) => (
-            <option key={i + 1} value={i + 1}>{name}</option>
-          ))}
-        </select>
-        <select
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
-        >
-          {Array.from({ length: 5 }, (_, i) => getCurrentYear() - 2 + i).map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
-      </div>
+        <div className="flex gap-2 mb-6">
+          <select
+            value={month}
+            onChange={(e) => setMonth(Number(e.target.value))}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+          >
+            {MONTH_NAMES.slice(1).map((name, i) => (
+              <option key={i + 1} value={i + 1}>{name}</option>
+            ))}
+          </select>
+          <select
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+          >
+            {Array.from({ length: 5 }, (_, i) => getCurrentYear() - 2 + i).map((y) => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
 
       {isLoading ? (
         <Loading />
@@ -101,16 +101,16 @@ export function ExpensesPage() {
                 style={{ backgroundColor: expense.category_slug === 'arriendo' ? '#6366f1' : '#94a3b8' }}
               />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">{expense.description}</p>
-                <p className="text-sm text-gray-500">{expense.category_name || expense.category_slug}</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{expense.description}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{expense.category_name || expense.category_slug}</p>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-gray-900">{formatCurrency(expense.amount)}</p>
-                <p className="text-xs text-gray-400">{formatDate(expense.expense_date)}</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(expense.amount)}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(expense.expense_date)}</p>
               </div>
               <button
                 onClick={() => deleteExpense.mutate(expense.id)}
-                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/30"
               >
                 <FiTrash2 size={16} />
               </button>

@@ -28,7 +28,7 @@ export function ReportsPage() {
           <select
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
           >
             {Array.from({ length: 5 }, (_, i) => getCurrentYear() - 2 + i).map((y) => (
               <option key={y} value={y}>{y}</option>
@@ -78,7 +78,7 @@ export function ReportsPage() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-8">No hay datos para este año</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center py-8">No hay datos para este año</p>
             )}
           </Card>
         </>

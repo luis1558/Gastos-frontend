@@ -54,7 +54,7 @@ export function RegisterPage() {
         />
 
         {registerMutation.error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300">
             {registerMutation.error.message || 'Error al registrarse'}
           </div>
         )}
@@ -64,9 +64,9 @@ export function RegisterPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-500">
+      <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
         ¿Ya tienes cuenta?{' '}
-        <Link to={ROUTES.LOGIN} className="text-indigo-600 hover:text-indigo-500 font-medium">
+        <Link to={ROUTES.LOGIN} className="text-indigo-600 hover:text-indigo-500 font-medium dark:text-indigo-400 dark:hover:text-indigo-300">
           Iniciar Sesión
         </Link>
       </p>

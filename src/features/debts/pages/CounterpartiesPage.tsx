@@ -57,13 +57,13 @@ export function CounterpartiesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {counterparties.map((cp) => (
             <Card key={cp.id} className="flex items-center gap-3">
-              <div className="p-2 bg-gray-100 rounded-full">
-                <FiUser size={20} className="text-gray-500" />
+                <div className="p-2 bg-gray-100 rounded-full dark:bg-gray-800">
+                <FiUser size={20} className="text-gray-500 dark:text-gray-400" />
               </div>
               <div>
-                <p className="font-medium text-gray-900">{cp.name}</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{cp.name}</p>
                 {cp.type && (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {COUNTERPARTY_TYPES.find((t) => t.value === cp.type)?.label || cp.type}
                   </p>
                 )}

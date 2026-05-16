@@ -90,18 +90,22 @@ export function DebtsListPage() {
       )}
 
       <div className="flex gap-2 mb-6">
-        <Select
-          options={[{ value: '', label: 'Todos' }, ...DEBT_TYPES.map((t) => ({ value: t.value, label: t.label }))]}
+        <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
-          className="w-40"
-        />
-        <Select
-          options={[{ value: '', label: 'Todos' }, ...DEBT_STATUSES.map((s) => ({ value: s.value, label: s.label }))]}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 w-40"
+        >
+          <option value="">Todos</option>
+          {DEBT_TYPES.map((t) => (<option key={t.value} value={t.value}>{t.label}</option>))}
+        </select>
+        <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="w-40"
-        />
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 w-40"
+        >
+          <option value="">Todos</option>
+          {DEBT_STATUSES.map((s) => (<option key={s.value} value={s.value}>{s.label}</option>))}
+        </select>
       </div>
 
       {isLoading ? (
@@ -112,18 +116,18 @@ export function DebtsListPage() {
             <Link key={debt.id} to={ROUTES.DEBT_DETAIL(debt.id)}>
               <Card className="flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
                 <div className={`w-1 h-14 rounded-full shrink-0 ${debt.type === 'receivable' ? 'bg-green-400' : 'bg-red-400'}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{debt.description}</p>
-                  <p className="text-sm text-gray-500">{debt.counterparty_name || 'Sin contraparte'}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900">{formatCurrency(debt.original_amount)}</p>
-                  {debt.remaining_amount !== undefined && debt.remaining_amount > 0 && (
-                    <p className="text-xs text-gray-400">Restan: {formatCurrency(debt.remaining_amount)}</p>
-                  )}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{debt.description}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{debt.counterparty_name || 'Sin contraparte'}</p>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(debt.original_amount)}</p>
+                {debt.remaining_amount !== undefined && debt.remaining_amount > 0 && (
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Restan: {formatCurrency(debt.remaining_amount)}</p>
+                )}
                 </div>
                 <div className="hidden sm:block">{getStatusBadge(debt.status)}</div>
-                <FiArrowRight size={16} className="text-gray-300 shrink-0" />
+                <FiArrowRight size={16} className="text-gray-300 dark:text-gray-600 shrink-0" />
               </Card>
             </Link>
           ))}

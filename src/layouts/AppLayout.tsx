@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { FiLayout, FiDollarSign, FiTrendingUp, FiPieChart, FiMenu, FiX, FiLogOut, FiUser, FiGrid, FiCreditCard } from 'react-icons/fi'
+import { FiLayout, FiDollarSign, FiTrendingUp, FiPieChart, FiMenu, FiX, FiLogOut, FiUser, FiGrid, FiCreditCard, FiSun, FiMoon } from 'react-icons/fi'
 import { useAuthStore } from '../stores/authStore'
+import { useThemeStore } from '../stores/themeStore'
 import { ROUTES } from '../utils/constants'
 import { classNames } from '../utils/format'
 
@@ -23,15 +24,16 @@ const bottomNavItems = [
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, logout } = useAuthStore()
+  const { isDark, toggle: toggleTheme } = useThemeStore()
   const location = useLocation()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Mobile header */}
-      <header className="lg:hidden fixed top-0 inset-x-0 z-30 bg-white border-b border-gray-200 px-4 h-16 flex items-center justify-between">
+      <header className="lg:hidden fixed top-0 inset-x-0 z-30 bg-white border-b border-gray-200 px-4 h-16 flex items-center justify-between dark:bg-gray-900 dark:border-gray-700">
         <button
           onClick={() => setSidebarOpen(true)}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800"
         >
           <FiMenu size={24} />
         </button>
@@ -39,7 +41,7 @@ export function AppLayout() {
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
             <span className="text-sm font-bold text-white">G</span>
           </div>
-          <span className="font-semibold text-gray-900">Gastos</span>
+          <span className="font-semibold text-gray-900 dark:text-gray-100">Gastos</span>
         </div>
         <div className="w-10" />
       </header>
@@ -52,23 +54,23 @@ export function AppLayout() {
       {/* Sidebar */}
       <aside
         className={classNames(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 flex flex-col',
+          'fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 flex flex-col dark:bg-gray-900 dark:border-gray-700',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 shrink-0">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 shrink-0 dark:border-gray-700">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
               <span className="text-lg font-bold text-white">G</span>
             </div>
             <div>
-              <span className="font-semibold text-gray-900">Gastos</span>
-              <p className="text-xs text-gray-500">App</p>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">Gastos</span>
+              <p className="text-xs text-gray-500 dark:text-gray-400">App</p>
             </div>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+            className="lg:hidden p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg dark:hover:bg-gray-800 dark:hover:text-gray-300"
           >
             <FiX size={20} />
           </button>
@@ -85,8 +87,8 @@ export function AppLayout() {
                 classNames(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-indigo-50 text-indigo-700'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                    ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100',
                 )
               }
             >
@@ -96,21 +98,32 @@ export function AppLayout() {
           ))}
         </nav>
 
-        <div className="border-t border-gray-200 p-4 shrink-0">
+        {/* Theme toggle */}
+        <div className="px-3 pb-2">
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+          >
+            {isDark ? <FiSun size={20} /> : <FiMoon size={20} />}
+            {isDark ? 'Modo Claro' : 'Modo Oscuro'}
+          </button>
+        </div>
+
+        <div className="border-t border-gray-200 p-4 shrink-0 dark:border-gray-700">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-              <FiUser size={16} className="text-gray-500" />
+            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center dark:bg-gray-700">
+              <FiUser size={16} className="text-gray-500 dark:text-gray-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="text-sm font-medium text-gray-900 truncate dark:text-gray-100">
                 {user?.full_name || user?.email}
               </p>
-              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              <p className="text-xs text-gray-500 truncate dark:text-gray-400">{user?.email}</p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
           >
             <FiLogOut size={16} />
             Cerrar sesión
@@ -126,7 +139,7 @@ export function AppLayout() {
       </main>
 
       {/* Bottom navigation (mobile) */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
         <div className="flex items-center justify-around h-16">
           {bottomNavItems.map((item) => {
             const isActive = item.to === ROUTES.DASHBOARD
@@ -139,7 +152,7 @@ export function AppLayout() {
                 end={item.to === ROUTES.DASHBOARD}
                 className={classNames(
                   'flex flex-col items-center gap-0.5 px-3 py-1 text-xs font-medium transition-colors',
-                  isActive ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600',
+                  isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300',
                 )}
               >
                 <item.icon size={20} />

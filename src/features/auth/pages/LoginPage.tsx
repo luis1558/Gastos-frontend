@@ -51,6 +51,18 @@ export function LoginPage() {
           </div>
         )}
 
+        <div className="flex items-start gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <input
+            type="checkbox"
+            id="privacy"
+            defaultChecked
+            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800"
+          />
+          <label htmlFor="privacy">
+            Esta app respeta tu privacidad. Tus datos financieros son solo tuyos, no se comparten con terceros ni se usan para ningún otro propósito.
+          </label>
+        </div>
+
         <Button type="submit" loading={login.isPending} className="w-full">
           Iniciar Sesión
         </Button>

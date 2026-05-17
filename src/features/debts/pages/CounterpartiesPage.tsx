@@ -17,9 +17,9 @@ import { FiPlus, FiUser } from 'react-icons/fi'
 const counterpartySchema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres'),
   type: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().email('Email inválido').optional().or(z.literal('')),
-  notes: z.string().optional(),
+  phone: z.string().min(1, 'Teléfono requerido'),
+  email: z.string().min(1, 'Email requerido').email('Email inválido'),
+  notes: z.string().min(1, 'Notas requeridas'),
 })
 
 type CounterpartyForm = z.infer<typeof counterpartySchema>
@@ -99,13 +99,14 @@ export function CounterpartiesPage() {
           />
           <Input
             id="phone"
-            label="Teléfono (opcional)"
+            label="Teléfono"
             placeholder="+56 9 1234 5678"
+            error={errors.phone?.message}
             {...register('phone')}
           />
           <Input
             id="email"
-            label="Email (opcional)"
+            label="Email"
             type="email"
             placeholder="correo@ejemplo.com"
             error={errors.email?.message}
@@ -113,8 +114,9 @@ export function CounterpartiesPage() {
           />
           <Input
             id="notes"
-            label="Notas (opcional)"
+            label="Notas"
             placeholder="Notas adicionales"
+            error={errors.notes?.message}
             {...register('notes')}
           />
           <Button type="submit" loading={createCounterparty.isPending} className="w-full">

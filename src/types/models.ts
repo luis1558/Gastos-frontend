@@ -88,6 +88,8 @@ export interface DebtPayment {
   amount: number
   description?: string | null
   notes?: string | null
+  category_id?: string | null
+  expense_id?: string | null
   created_at: string
   updated_at: string
 }

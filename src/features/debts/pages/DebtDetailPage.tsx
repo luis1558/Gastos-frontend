@@ -4,9 +4,11 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useDebt, usePayments, useCreatePayment } from '../hooks'
+import { useCategories } from '../../expenses/hooks'
 import { Card } from '../../../components/ui/Card'
 import { Button } from '../../../components/ui/Button'
 import { Input } from '../../../components/ui/Input'
+import { Select } from '../../../components/ui/Select'
 import { Modal } from '../../../components/ui/Modal'
 import { Badge } from '../../../components/ui/Badge'
 import { Loading } from '../../../components/ui/Loading'
@@ -18,6 +20,7 @@ const paymentSchema = z.object({
   amount: z.number().positive('Monto debe ser mayor a 0'),
   payment_date: z.string().min(1, 'Fecha requerida'),
   description: z.string().optional(),
+  category_id: z.string().optional(),
 })
 
 type PaymentForm = z.infer<typeof paymentSchema>
@@ -29,6 +32,7 @@ export function DebtDetailPage() {
   const { data: debt, isLoading } = useDebt(id!)
   const { data: payments } = usePayments(id!)
   const createPayment = useCreatePayment(id!)
+  const { data: categories } = useCategories(true)
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<PaymentForm>({
     resolver: zodResolver(paymentSchema),
@@ -125,9 +129,16 @@ export function DebtDetailPage() {
           <div className="space-y-2">
             {payments.map((payment) => (
               <div key={payment.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0 dark:border-gray-700">
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{payment.description || 'Pago'}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(payment.payment_date)}</p>
+                <div className="flex items-center gap-2">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{payment.description || 'Pago'}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(payment.payment_date)}</p>
+                  </div>
+                  {payment.expense_id && (
+                    <span className="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">
+                      Gasto
+                    </span>
+                  )}
                 </div>
                 <p className="font-semibold text-green-600">{formatCurrency(payment.amount)}</p>
               </div>
@@ -161,6 +172,13 @@ export function DebtDetailPage() {
             label="Descripción (opcional)"
             placeholder="Nota del pago"
             {...register('description')}
+          />
+          <Select
+            id="category_id"
+            label="Categoría de gasto (opcional)"
+            placeholder="Sin categoría"
+            options={(categories || []).map((c) => ({ value: c.id, label: c.name }))}
+            {...register('category_id')}
           />
           <Button type="submit" loading={createPayment.isPending} className="w-full">
             Registrar Pago

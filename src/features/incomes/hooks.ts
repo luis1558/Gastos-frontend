@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { incomesApi } from './api'
 import { getCurrentYear, getCurrentMonth } from '../../utils/format'
 
@@ -7,6 +7,7 @@ export function useIncomesList(year?: number) {
   return useQuery({
     queryKey: ['monthly-incomes', y],
     queryFn: () => incomesApi.list(y),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -17,6 +18,7 @@ export function useIncome(year?: number, month?: number) {
   return useQuery({
     queryKey: ['monthly-income', y, m],
     queryFn: () => incomesApi.get(y, m),
+    staleTime: 5 * 60 * 1000,
     retry: false,
   })
 }

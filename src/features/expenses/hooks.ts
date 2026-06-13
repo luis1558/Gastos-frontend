@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { expensesApi, categoriesApi } from './api'
 import { getCurrentYear, getCurrentMonth } from '../../utils/format'
 
@@ -9,6 +9,7 @@ export function useExpenses(year?: number, month?: number) {
   return useQuery({
     queryKey: ['expenses', y, m],
     queryFn: () => expensesApi.list(y, m),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -41,6 +42,8 @@ export function useCategories(activeOnly?: boolean) {
   return useQuery({
     queryKey: ['expense-categories', activeOnly],
     queryFn: () => categoriesApi.list(activeOnly),
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
   })
 }
 

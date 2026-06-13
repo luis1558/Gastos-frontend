@@ -1,10 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { debtsApi, counterpartiesApi } from './api'
 
 export function useDebts(type?: string, status?: string) {
   return useQuery({
     queryKey: ['debts', type, status],
     queryFn: () => debtsApi.list(type, status),
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -40,6 +41,7 @@ export function useDebtSummary() {
   return useQuery({
     queryKey: ['debt-summary'],
     queryFn: debtsApi.summary,
+    placeholderData: keepPreviousData,
   })
 }
 
@@ -69,6 +71,8 @@ export function useCounterparties() {
   return useQuery({
     queryKey: ['counterparties'],
     queryFn: counterpartiesApi.list,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
   })
 }
 

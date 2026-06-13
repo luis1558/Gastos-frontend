@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { dashboardApi } from './api'
 import { getCurrentYear, getCurrentMonth } from '../../utils/format'
 
@@ -9,5 +9,6 @@ export function useMonthlySummary(year?: number, month?: number) {
   return useQuery({
     queryKey: ['monthly-summary', y, m],
     queryFn: () => dashboardApi.monthlySummary(y, m),
+    placeholderData: keepPreviousData,
   })
 }

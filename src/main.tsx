@@ -21,6 +21,11 @@ const queryClient = new QueryClient({
 useAuthStore.getState().initialize()
 useThemeStore.getState().initialize()
 
+// After a new Vercel deploy, lazy-loaded chunks get new hashes.
+// Users with the old app loaded would get "Failed to fetch dynamically imported module".
+// Vite fires this event on preload failure — reloading fetches the fresh chunks.
+window.addEventListener('vite:preloadError', () => window.location.reload())
+
 createRoot(document.getElementById('root')!).render(
   <QueryClientProvider client={queryClient}>
     <StrictMode>

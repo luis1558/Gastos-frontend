@@ -41,6 +41,8 @@ export interface Expense {
   expense_date: string
   year: number
   month: number
+  period_year?: number
+  period_month?: number
   amount: number
   description: string
   payment_method?: PaymentMethod | null

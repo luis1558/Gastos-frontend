@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useExpenses, useCreateExpense, useDeleteExpense, useCategories } from '../hooks'
+import { useExpenses, useCreateExpense, useUpdateExpense, useDeleteExpense, useCategories } from '../hooks'
 import { Card } from '../../../components/ui/Card'
 import { Button } from '../../../components/ui/Button'
 import { Input } from '../../../components/ui/Input'
@@ -13,7 +13,7 @@ import { Loading } from '../../../components/ui/Loading'
 import { PageHeader } from '../../../components/ui/PageHeader'
 import { formatCurrency, formatDate, getCurrentYear, getCurrentMonth } from '../../../utils/format'
 import { MONTH_NAMES, PAYMENT_METHODS, ROUTES } from '../../../utils/constants'
-import { FiPlus, FiTrash2, FiSettings } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiSettings, FiCalendar } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 
 const expenseSchema = z.object({
@@ -33,11 +33,29 @@ export function ExpensesPage() {
   const [year, setYear] = useState(getCurrentYear())
   const [month, setMonth] = useState(getCurrentMonth())
   const [modalOpen, setModalOpen] = useState(false)
+  const [movingExpense, setMovingExpense] = useState<{ id: string; description: string; month: number; year: number } | null>(null)
+  const [moveMonth, setMoveMonth] = useState(month)
+  const [moveYear, setMoveYear] = useState(year)
 
   const { data: expenses, isLoading } = useExpenses(year, month)
   const { data: categories } = useCategories(true)
   const createExpense = useCreateExpense()
+  const updateExpense = useUpdateExpense()
   const deleteExpense = useDeleteExpense()
+
+  const openMoveModal = (expense: { id: string; description: string; month: number; year: number }) => {
+    setMoveMonth(expense.month)
+    setMoveYear(expense.year)
+    setMovingExpense(expense)
+  }
+
+  const handleMove = () => {
+    if (!movingExpense) return
+    updateExpense.mutate(
+      { id: movingExpense.id, data: { period_month: moveMonth, period_year: moveYear } },
+      { onSuccess: () => setMovingExpense(null) },
+    )
+  }
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ExpenseForm>({
     resolver: zodResolver(expenseSchema),
@@ -117,6 +135,13 @@ export function ExpensesPage() {
                 <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(expense.expense_date)}</p>
               </div>
               <button
+                onClick={() => openMoveModal({ id: expense.id, description: expense.description, month: expense.month, year: expense.year })}
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:hover:bg-blue-900/30"
+                title="Mover a otro período"
+              >
+                <FiCalendar size={16} />
+              </button>
+              <button
                 onClick={() => deleteExpense.mutate(expense.id)}
                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/30"
               >
@@ -134,6 +159,45 @@ export function ExpensesPage() {
           />
         </Card>
       )}
+
+      <Modal isOpen={!!movingExpense} onClose={() => setMovingExpense(null)} title="Mover a otro período">
+        {movingExpense && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="font-medium text-gray-900 dark:text-gray-100">{movingExpense.description}</span>
+              {' '}se moverá al período que selecciones.
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Nuevo período
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={moveMonth}
+                  onChange={(e) => setMoveMonth(Number(e.target.value))}
+                  className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                >
+                  {MONTH_NAMES.slice(1).map((name, i) => (
+                    <option key={i + 1} value={i + 1}>{name}</option>
+                  ))}
+                </select>
+                <select
+                  value={moveYear}
+                  onChange={(e) => setMoveYear(Number(e.target.value))}
+                  className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                >
+                  {Array.from({ length: 5 }, (_, i) => getCurrentYear() - 2 + i).map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <Button onClick={handleMove} loading={updateExpense.isPending} className="w-full">
+              Mover gasto
+            </Button>
+          </div>
+        )}
+      </Modal>
 
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Nuevo Gasto">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

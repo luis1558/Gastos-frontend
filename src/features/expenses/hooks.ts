@@ -30,9 +30,28 @@ export function useCreateExpense() {
 export function useUpdateExpense() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<import('../../types/models').Expense> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<Expense> }) =>
       expensesApi.update(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
+    onMutate: async ({ id, data }) => {
+      // Optimistically remove from current view when moving to a different period
+      if (data.period_month !== undefined || data.period_year !== undefined) {
+        await qc.cancelQueries({ queryKey: ['expenses'] })
+        const snapshots = qc.getQueriesData<Expense[]>({ queryKey: ['expenses'] })
+        qc.setQueriesData<Expense[]>({ queryKey: ['expenses'] }, (old) =>
+          old?.filter((e) => e.id !== id) ?? old,
+        )
+        return { snapshots }
+      }
+    },
+    onSuccess: (_data, variables) => {
+      const moved = variables.data.period_month !== undefined || variables.data.period_year !== undefined
+      toast.success(moved ? 'Gasto movido' : 'Gasto actualizado')
+    },
+    onError: (_err, _vars, context) => {
+      context?.snapshots?.forEach(([key, data]) => qc.setQueryData(key, data))
+      toast.error('Error al actualizar el gasto')
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
   })
 }
 

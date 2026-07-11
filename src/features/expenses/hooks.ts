@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { expensesApi, categoriesApi } from './api'
 import { getCurrentYear, getCurrentMonth } from '../../utils/format'
+import type { Expense } from '../../types/models'
 
 export function useExpenses(year?: number, month?: number) {
   const y = year || getCurrentYear()
@@ -17,7 +19,11 @@ export function useCreateExpense() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: expensesApi.create,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
+    onSuccess: () => {
+      toast.success('Gasto registrado')
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+    },
+    onError: () => toast.error('Error al registrar el gasto'),
   })
 }
 
@@ -34,7 +40,20 @@ export function useDeleteExpense() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: expensesApi.delete,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
+    onMutate: async (expenseId) => {
+      await qc.cancelQueries({ queryKey: ['expenses'] })
+      const snapshots = qc.getQueriesData<Expense[]>({ queryKey: ['expenses'] })
+      qc.setQueriesData<Expense[]>({ queryKey: ['expenses'] }, (old) =>
+        old?.filter((e) => e.id !== expenseId) ?? old,
+      )
+      return { snapshots }
+    },
+    onSuccess: () => toast.success('Gasto eliminado'),
+    onError: (_err, _id, context) => {
+      context?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data))
+      toast.error('Error al eliminar el gasto')
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
   })
 }
 

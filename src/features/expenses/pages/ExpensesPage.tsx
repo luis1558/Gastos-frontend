@@ -23,6 +23,8 @@ const expenseSchema = z.object({
   expense_date: z.string().min(1, 'Fecha requerida'),
   payment_method: z.string().optional(),
   notes: z.string().optional(),
+  period_month: z.number().int().min(1).max(12),
+  period_year: z.number().int().min(2000).max(2100),
 })
 
 type ExpenseForm = z.infer<typeof expenseSchema>
@@ -39,7 +41,13 @@ export function ExpensesPage() {
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ExpenseForm>({
     resolver: zodResolver(expenseSchema),
+    defaultValues: { period_month: month, period_year: year },
   })
+
+  const openModal = () => {
+    reset({ period_month: month, period_year: year })
+    setModalOpen(true)
+  }
 
   const onSubmit = (data: ExpenseForm) => {
     createExpense.mutate(data as any, {
@@ -62,7 +70,7 @@ export function ExpensesPage() {
                 <FiSettings size={16} />
               </Button>
             </Link>
-            <Button onClick={() => setModalOpen(true)} size="sm">
+            <Button onClick={openModal} size="sm">
               <FiPlus size={16} className="mr-1" /> Nuevo Gasto
             </Button>
           </div>
@@ -122,7 +130,7 @@ export function ExpensesPage() {
           <EmptyState
             title="Sin gastos"
             description={`No hay gastos registrados en ${MONTH_NAMES[month]} ${year}`}
-            action={<Button onClick={() => setModalOpen(true)}><FiPlus size={16} className="mr-1" /> Registrar Gasto</Button>}
+            action={<Button onClick={openModal}><FiPlus size={16} className="mr-1" /> Registrar Gasto</Button>}
           />
         </Card>
       )}
@@ -173,6 +181,32 @@ export function ExpensesPage() {
             placeholder="Notas adicionales"
             {...register('notes')}
           />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Período de imputación
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              Mes y año al que pertenece este gasto (puede diferir de la fecha real).
+            </p>
+            <div className="flex gap-2">
+              <select
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                {...register('period_month', { valueAsNumber: true })}
+              >
+                {MONTH_NAMES.slice(1).map((name, i) => (
+                  <option key={i + 1} value={i + 1}>{name}</option>
+                ))}
+              </select>
+              <select
+                className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                {...register('period_year', { valueAsNumber: true })}
+              >
+                {Array.from({ length: 5 }, (_, i) => getCurrentYear() - 2 + i).map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+          </div>
           <Button type="submit" loading={createExpense.isPending} className="w-full">
             Guardar Gasto
           </Button>

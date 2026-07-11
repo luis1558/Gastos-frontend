@@ -42,6 +42,9 @@ class ApiClient {
       const error = await response.json().catch(() => ({ error: { message: 'Unknown error' } }))
       throw error
     }
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+      return undefined as T
+    }
     return response.json() as Promise<T>
   }
 

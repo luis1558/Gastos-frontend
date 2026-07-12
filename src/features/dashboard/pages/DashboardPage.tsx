@@ -1,5 +1,5 @@
 import { useMonthlySummary } from '../hooks'
-import { useMonthForecast } from '../../reports/hooks'
+import { useMonthForecast, useRecurringExpenses } from '../../reports/hooks'
 import { Card } from '../../../components/ui/Card'
 import { Loading } from '../../../components/ui/Loading'
 import { formatCurrency, formatMonthYear, getCurrentYear, getCurrentMonth } from '../../../utils/format'
@@ -12,6 +12,7 @@ export function DashboardPage() {
   const [month, setMonth] = useState(getCurrentMonth())
   const { data, isLoading } = useMonthlySummary(year, month)
   const { data: forecast } = useMonthForecast(year, month)
+  const { data: recurring } = useRecurringExpenses()
 
   if (isLoading) return <Loading />
 
@@ -189,6 +190,40 @@ export function DashboardPage() {
               <p className="text-gray-500 dark:text-gray-400 text-center py-8">No hay gastos registrados este mes</p>
             )}
           </Card>
+
+          {recurring && recurring.items.length > 0 && (() => {
+            const total = recurring.items.reduce((sum, i) => sum + i.avg_amount, 0)
+            return (
+              <Card className="mt-6">
+                <div className="flex items-center justify-between mb-1">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Compromisos detectados</h2>
+                  <span className="text-xs bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full">
+                    {recurring.items.length} detectados
+                  </span>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Gastos que se repiten mes a mes</p>
+                <div className="space-y-3">
+                  {recurring.items.map((item) => (
+                    <div key={`${item.category_id}-${item.description}`} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span>🔁</span>
+                        <span className="font-medium text-gray-800 dark:text-gray-200 truncate">{item.description}</span>
+                      </div>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 mx-3 shrink-0">{item.category_name}</span>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">~{formatCurrency(item.avg_amount)}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">({item.occurrence_months}/{recurring.checked_months} meses)</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-between items-center pt-3 mt-3 border-t border-gray-100 dark:border-gray-700">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Total comprometido:</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">~{formatCurrency(total)}</span>
+                </div>
+              </Card>
+            )
+          })()}
         </>
       ) : (
         <Card>

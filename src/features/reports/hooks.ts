@@ -26,3 +26,11 @@ export function useMonthForecast(year: number, month: number) {
     placeholderData: keepPreviousData,
   })
 }
+
+export function useRecurringExpenses() {
+  return useQuery({
+    queryKey: ['recurring-expenses'],
+    queryFn: () => reportsApi.recurringExpenses(),
+    staleTime: 10 * 60 * 1000,
+  })
+}

@@ -13,7 +13,7 @@ import { Loading } from '../../../components/ui/Loading'
 import { PageHeader } from '../../../components/ui/PageHeader'
 import { formatCurrency, formatDate, getCurrentYear, getCurrentMonth } from '../../../utils/format'
 import { MONTH_NAMES, PAYMENT_METHODS, ROUTES } from '../../../utils/constants'
-import { FiPlus, FiTrash2, FiSettings, FiCalendar } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiSettings, FiCalendar, FiTag } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 
 const expenseSchema = z.object({
@@ -36,6 +36,8 @@ export function ExpensesPage() {
   const [movingExpense, setMovingExpense] = useState<{ id: string; description: string; month: number; year: number } | null>(null)
   const [moveMonth, setMoveMonth] = useState(month)
   const [moveYear, setMoveYear] = useState(year)
+  const [changingCategoryExpense, setChangingCategoryExpense] = useState<{ id: string; description: string; category_id: string } | null>(null)
+  const [newCategoryId, setNewCategoryId] = useState('')
 
   const { data: expenses, isLoading } = useExpenses(year, month)
   const { data: categories } = useCategories(true)
@@ -47,6 +49,19 @@ export function ExpensesPage() {
     setMoveMonth(expense.month)
     setMoveYear(expense.year)
     setMovingExpense(expense)
+  }
+
+  const openChangeCategoryModal = (expense: { id: string; description: string; category_id: string }) => {
+    setNewCategoryId(expense.category_id)
+    setChangingCategoryExpense(expense)
+  }
+
+  const handleChangeCategory = () => {
+    if (!changingCategoryExpense || !newCategoryId) return
+    updateExpense.mutate(
+      { id: changingCategoryExpense.id, data: { category_id: newCategoryId } },
+      { onSuccess: () => setChangingCategoryExpense(null) },
+    )
   }
 
   const handleMove = () => {
@@ -135,6 +150,13 @@ export function ExpensesPage() {
                 <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(expense.expense_date)}</p>
               </div>
               <button
+                onClick={() => openChangeCategoryModal({ id: expense.id, description: expense.description, category_id: expense.category_id })}
+                className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors dark:hover:bg-purple-900/30"
+                title="Cambiar categoría"
+              >
+                <FiTag size={16} />
+              </button>
+              <button
                 onClick={() => openMoveModal({ id: expense.id, description: expense.description, month: expense.month, year: expense.year })}
                 className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:hover:bg-blue-900/30"
                 title="Mover a otro período"
@@ -159,6 +181,39 @@ export function ExpensesPage() {
           />
         </Card>
       )}
+
+      <Modal isOpen={!!changingCategoryExpense} onClose={() => setChangingCategoryExpense(null)} title="Cambiar categoría">
+        {changingCategoryExpense && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="font-medium text-gray-900 dark:text-gray-100">{changingCategoryExpense.description}</span>
+              {' '}se moverá a la categoría que selecciones.
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Nueva categoría
+              </label>
+              <select
+                value={newCategoryId}
+                onChange={(e) => setNewCategoryId(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+              >
+                {(categories || []).map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <Button
+              onClick={handleChangeCategory}
+              loading={updateExpense.isPending}
+              disabled={newCategoryId === changingCategoryExpense.category_id}
+              className="w-full"
+            >
+              Cambiar categoría
+            </Button>
+          </div>
+        )}
+      </Modal>
 
       <Modal isOpen={!!movingExpense} onClose={() => setMovingExpense(null)} title="Mover a otro período">
         {movingExpense && (

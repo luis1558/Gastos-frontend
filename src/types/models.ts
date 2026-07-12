@@ -156,3 +156,19 @@ export interface DebtSummary {
   overdue_payable_count: number
   active_debt_count: number
 }
+
+export interface RecurringExpenseItem {
+  description: string
+  category_id: string
+  category_name: string
+  category_slug: string
+  avg_amount: number
+  occurrence_months: number
+  last_amount: number
+  last_date: string
+}
+
+export interface RecurringExpenses {
+  checked_months: number
+  items: RecurringExpenseItem[]
+}

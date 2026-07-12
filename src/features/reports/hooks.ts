@@ -10,3 +10,11 @@ export function useYearlySummary(year?: number) {
     placeholderData: keepPreviousData,
   })
 }
+
+export function useMonthlySummary(year: number, month: number) {
+  return useQuery({
+    queryKey: ['monthly-summary', year, month],
+    queryFn: () => reportsApi.monthlySummary(year, month),
+    placeholderData: keepPreviousData,
+  })
+}

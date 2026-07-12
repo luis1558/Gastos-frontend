@@ -18,3 +18,11 @@ export function useMonthlySummary(year: number, month: number) {
     placeholderData: keepPreviousData,
   })
 }
+
+export function useMonthForecast(year: number, month: number) {
+  return useQuery({
+    queryKey: ['month-forecast', year, month],
+    queryFn: () => reportsApi.monthForecast(year, month),
+    placeholderData: keepPreviousData,
+  })
+}

@@ -1,4 +1,5 @@
 import { useMonthlySummary } from '../hooks'
+import { useMonthForecast } from '../../reports/hooks'
 import { Card } from '../../../components/ui/Card'
 import { Loading } from '../../../components/ui/Loading'
 import { formatCurrency, formatMonthYear, getCurrentYear, getCurrentMonth } from '../../../utils/format'
@@ -10,6 +11,7 @@ export function DashboardPage() {
   const [year, setYear] = useState(getCurrentYear())
   const [month, setMonth] = useState(getCurrentMonth())
   const { data, isLoading } = useMonthlySummary(year, month)
+  const { data: forecast } = useMonthForecast(year, month)
 
   if (isLoading) return <Loading />
 
@@ -80,6 +82,84 @@ export function DashboardPage() {
               </div>
             </Card>
           </div>
+
+          {forecast && (() => {
+            const monthPct = Math.round((forecast.days_elapsed / forecast.days_in_month) * 100)
+            const spendPct = forecast.projected_expenses > 0
+              ? Math.round((forecast.total_spent / forecast.projected_expenses) * 100)
+              : 0
+            const spendBarWidth = Math.min(spendPct, 100)
+
+            let badge: string
+            if (forecast.projected_balance < 0) {
+              badge = '🔴 Vas a pasarte'
+            } else if (spendPct > monthPct + 10) {
+              badge = '🟡 Ojo al ritmo'
+            } else {
+              badge = '🟢 En camino'
+            }
+
+            const spendBarColor = forecast.projected_balance < 0
+              ? 'bg-red-500'
+              : spendPct > monthPct + 10
+              ? 'bg-yellow-400'
+              : 'bg-green-500'
+
+            return (
+              <Card className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Proyección de mes</h2>
+                  <span className="text-sm font-medium">{badge}</span>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                      Día {forecast.days_elapsed} de {forecast.days_in_month}
+                    </p>
+                    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5">
+                      <div
+                        className="bg-blue-400 h-2.5 rounded-full transition-all"
+                        style={{ width: `${monthPct}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{monthPct}% del mes</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Gastado vs proyectado</p>
+                    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5">
+                      <div
+                        className={`${spendBarColor} h-2.5 rounded-full transition-all`}
+                        style={{ width: `${spendBarWidth}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      <span>{formatCurrency(forecast.total_spent)} gastado</span>
+                      <span>{formatCurrency(forecast.projected_expenses)} proyectado</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-100 dark:border-gray-700 space-y-1">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      Balance proyectado al día {forecast.days_in_month}:{' '}
+                      <span className={`font-semibold ${forecast.projected_balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {formatCurrency(forecast.projected_balance)}
+                      </span>
+                    </p>
+                    {forecast.pace_pct !== null && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Ritmo:{' '}
+                        {forecast.pace_pct > 0
+                          ? `▲ ${Math.abs(forecast.pace_pct)}% más rápido que el mes pasado`
+                          : `▼ ${Math.abs(forecast.pace_pct)}% más lento que el mes pasado`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            )
+          })()}
 
           <Card>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">

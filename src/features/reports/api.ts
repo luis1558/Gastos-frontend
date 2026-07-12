@@ -1,5 +1,5 @@
 import { api } from '../../api/client'
-import type { MonthlySummary, YearlySummary } from '../../types/models'
+import type { MonthlySummary, YearlySummary, MonthForecast } from '../../types/models'
 
 export const reportsApi = {
   monthlySummary: (year: number, month: number) =>
@@ -7,4 +7,7 @@ export const reportsApi = {
 
   yearlySummary: (year: number) =>
     api.get<YearlySummary>('/reports/yearly-summary', { year }),
+
+  monthForecast: (year: number, month: number) =>
+    api.get<MonthForecast>('/reports/month-forecast', { year, month }),
 }

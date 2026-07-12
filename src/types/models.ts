@@ -136,6 +136,19 @@ export interface YearlySummary {
   months: YearMonthItem[]
 }
 
+export interface MonthForecast {
+  year: number
+  month: number
+  days_in_month: number
+  days_elapsed: number
+  total_spent: number
+  daily_rate: number
+  projected_expenses: number
+  total_income: number
+  projected_balance: number
+  pace_pct: number | null
+}
+
 export interface DebtSummary {
   total_receivable_pending: number
   total_payable_pending: number

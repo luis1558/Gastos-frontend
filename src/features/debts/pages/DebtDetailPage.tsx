@@ -55,8 +55,8 @@ export function DebtDetailPage() {
   }
 
   const statusColor = DEBT_STATUSES.find((s) => s.value === debt.status)?.color as any || 'gray'
-  const paidAmount = (payments || []).reduce((sum, p) => sum + p.amount, 0)
-  const remaining = debt.original_amount - paidAmount
+  const paidAmount = (payments || []).reduce((sum, p) => sum + Number(p.amount), 0)
+  const remaining = Number(debt.original_amount) - paidAmount
 
   return (
     <div>

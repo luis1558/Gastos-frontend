@@ -38,7 +38,7 @@ function slugify(text: string): string {
 
 export function CategoriesPage() {
   const [modalOpen, setModalOpen] = useState(false)
-  const [editing, setEditing] = useState<{ id: string; name: string; color?: string; icon?: string } | null>(null)
+  const [editing, setEditing] = useState<{ id: string; name: string; color?: string | null; icon?: string | null } | null>(null)
 
   const { data: categories, isLoading } = useCategories()
   const createCategory = useCreateCategory()
@@ -48,7 +48,7 @@ export function CategoriesPage() {
     resolver: zodResolver(categorySchema),
   })
 
-  const openEdit = (cat: { id: string; name: string; color?: string; icon?: string }) => {
+  const openEdit = (cat: { id: string; name: string; color?: string | null; icon?: string | null }) => {
     setEditing(cat)
     setValue('name', cat.name)
     setValue('color', cat.color || '')

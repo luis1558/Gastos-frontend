@@ -38,9 +38,11 @@ export function AppLayout() {
           <FiMenu size={24} />
         </button>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <span className="text-sm font-bold text-white">G</span>
-          </div>
+          <img
+            src={isDark ? '/logo-sidenav-dark.png' : '/logo-sidenav-light.png'}
+            alt="Gastos"
+            className="w-8 h-8 object-contain"
+          />
           <span className="font-semibold text-gray-900 dark:text-gray-100">Gastos</span>
         </div>
         <div className="w-10" />
@@ -60,9 +62,11 @@ export function AppLayout() {
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 shrink-0 dark:border-gray-700">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-              <span className="text-lg font-bold text-white">G</span>
-            </div>
+            <img
+              src={isDark ? '/logo-sidenav-dark.png' : '/logo-sidenav-light.png'}
+              alt="Gastos"
+              className="w-10 h-10 object-contain"
+            />
             <div>
               <span className="font-semibold text-gray-900 dark:text-gray-100">Gastos</span>
               <p className="text-xs text-gray-500 dark:text-gray-400">App</p>

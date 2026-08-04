@@ -44,8 +44,9 @@ export function useUpdateExpense() {
       }
     },
     onSuccess: (_data, variables) => {
-      const moved = variables.data.period_month !== undefined || variables.data.period_year !== undefined
-      toast.success(moved ? 'Gasto movido' : 'Gasto actualizado')
+      const isMoved = (variables.data.period_month !== undefined || variables.data.period_year !== undefined) && variables.data.amount === undefined
+      const isEdited = variables.data.amount !== undefined
+      toast.success(isMoved ? 'Gasto movido' : isEdited ? 'Gasto editado' : 'Gasto actualizado')
     },
     onError: (_err, _vars, context) => {
       context?.snapshots?.forEach(([key, data]) => qc.setQueryData(key, data))

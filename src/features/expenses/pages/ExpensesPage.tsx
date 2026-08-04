@@ -13,8 +13,9 @@ import { Loading } from '../../../components/ui/Loading'
 import { PageHeader } from '../../../components/ui/PageHeader'
 import { formatCurrency, formatDate, getCurrentYear, getCurrentMonth } from '../../../utils/format'
 import { MONTH_NAMES, PAYMENT_METHODS, ROUTES } from '../../../utils/constants'
-import { FiPlus, FiTrash2, FiSettings, FiCalendar, FiTag } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiSettings, FiCalendar, FiTag, FiEdit2 } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
+import type { Expense } from '../../../types/models'
 
 const expenseSchema = z.object({
   category_id: z.string().min(1, 'Selecciona una categoría'),
@@ -38,6 +39,8 @@ export function ExpensesPage() {
   const [moveYear, setMoveYear] = useState(year)
   const [changingCategoryExpense, setChangingCategoryExpense] = useState<{ id: string; description: string; category_id: string } | null>(null)
   const [newCategoryId, setNewCategoryId] = useState('')
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
+  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
 
   const { data: expenses, isLoading } = useExpenses(year, month)
   const { data: categories } = useCategories(true)
@@ -77,9 +80,42 @@ export function ExpensesPage() {
     defaultValues: { period_month: month, period_year: year },
   })
 
+  const { register: registerEdit, handleSubmit: handleEditSubmit, reset: resetEdit, formState: { errors: editErrors } } = useForm<ExpenseForm>({
+    resolver: zodResolver(expenseSchema),
+  })
+
   const openModal = () => {
     reset({ period_month: month, period_year: year })
     setModalOpen(true)
+  }
+
+  const openEdit = (expense: Expense) => {
+    setEditingExpense(expense)
+    resetEdit({
+      category_id: expense.category_id,
+      amount: expense.amount,
+      description: expense.description,
+      expense_date: expense.expense_date.slice(0, 10),
+      payment_method: expense.payment_method || '',
+      notes: expense.notes || '',
+      period_month: expense.period_month || expense.month,
+      period_year: expense.period_year || expense.year,
+    })
+  }
+
+  const onEditSubmit = (data: ExpenseForm) => {
+    if (!editingExpense) return
+    updateExpense.mutate(
+      { id: editingExpense.id, data: data as any },
+      { onSuccess: () => setEditingExpense(null) },
+    )
+  }
+
+  const handleDelete = () => {
+    if (!deletingExpenseId) return
+    deleteExpense.mutate(deletingExpenseId, {
+      onSuccess: () => setDeletingExpenseId(null),
+    })
   }
 
   const onSubmit = (data: ExpenseForm) => {
@@ -150,6 +186,13 @@ export function ExpensesPage() {
                 <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(expense.expense_date)}</p>
               </div>
               <button
+                onClick={() => openEdit(expense)}
+                className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors dark:hover:bg-indigo-900/30"
+                title="Editar gasto"
+              >
+                <FiEdit2 size={16} />
+              </button>
+              <button
                 onClick={() => openChangeCategoryModal({ id: expense.id, description: expense.description, category_id: expense.category_id })}
                 className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors dark:hover:bg-purple-900/30"
                 title="Cambiar categoría"
@@ -164,7 +207,7 @@ export function ExpensesPage() {
                 <FiCalendar size={16} />
               </button>
               <button
-                onClick={() => deleteExpense.mutate(expense.id)}
+                onClick={() => setDeletingExpenseId(expense.id)}
                 className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/30"
               >
                 <FiTrash2 size={16} />
@@ -330,6 +373,101 @@ export function ExpensesPage() {
             Guardar Gasto
           </Button>
         </form>
+      </Modal>
+
+      <Modal isOpen={!!editingExpense} onClose={() => setEditingExpense(null)} title="Editar Gasto">
+        <form onSubmit={handleEditSubmit(onEditSubmit)} className="space-y-4">
+          <Select
+            id="edit_category_id"
+            label="Categoría"
+            options={(categories || []).map((c) => ({ value: c.id, label: c.name }))}
+            placeholder="Seleccionar"
+            error={editErrors.category_id?.message}
+            {...registerEdit('category_id')}
+          />
+          <Input
+            id="edit_amount"
+            label="Monto"
+            type="number"
+            step="0.01"
+            placeholder="0"
+            error={editErrors.amount?.message}
+            {...registerEdit('amount', { valueAsNumber: true })}
+          />
+          <Input
+            id="edit_description"
+            label="Descripción"
+            placeholder="¿En qué gastaste?"
+            error={editErrors.description?.message}
+            {...registerEdit('description')}
+          />
+          <Input
+            id="edit_expense_date"
+            label="Fecha"
+            type="date"
+            error={editErrors.expense_date?.message}
+            {...registerEdit('expense_date')}
+          />
+          <Select
+            id="edit_payment_method"
+            label="Método de pago"
+            options={PAYMENT_METHODS.map((pm) => ({ value: pm.value, label: pm.label }))}
+            placeholder="Seleccionar (opcional)"
+            {...registerEdit('payment_method')}
+          />
+          <Input
+            id="edit_notes"
+            label="Notas (opcional)"
+            placeholder="Notas adicionales"
+            {...registerEdit('notes')}
+          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Período de imputación
+            </label>
+            <div className="flex gap-2">
+              <select
+                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                {...registerEdit('period_month', { valueAsNumber: true })}
+              >
+                {MONTH_NAMES.slice(1).map((name, i) => (
+                  <option key={i + 1} value={i + 1}>{name}</option>
+                ))}
+              </select>
+              <select
+                className="w-28 rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                {...registerEdit('period_year', { valueAsNumber: true })}
+              >
+                {Array.from({ length: 5 }, (_, i) => getCurrentYear() - 2 + i).map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <Button type="submit" loading={updateExpense.isPending} className="w-full">
+            Guardar cambios
+          </Button>
+        </form>
+      </Modal>
+
+      <Modal isOpen={!!deletingExpenseId} onClose={() => setDeletingExpenseId(null)} title="Eliminar gasto">
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            ¿Estás seguro que querés eliminar este gasto? Esta acción no se puede deshacer.
+          </p>
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={() => setDeletingExpenseId(null)} className="flex-1">
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleDelete}
+              loading={deleteExpense.isPending}
+              className="flex-1 !bg-red-600 hover:!bg-red-700"
+            >
+              Eliminar
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   )

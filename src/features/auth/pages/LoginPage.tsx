@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link } from 'react-router-dom'
+import { FiEye, FiEyeOff } from 'react-icons/fi'
 import { AuthLayout } from '../../../layouts/AuthLayout'
 import { Input } from '../../../components/ui/Input'
 import { Button } from '../../../components/ui/Button'
@@ -17,6 +19,7 @@ type LoginForm = z.infer<typeof loginSchema>
 
 export function LoginPage() {
   const login = useLogin()
+  const [showPassword, setShowPassword] = useState(false)
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   })
@@ -36,14 +39,25 @@ export function LoginPage() {
           error={errors.email?.message}
           {...register('email')}
         />
-        <Input
-          id="password"
-          label="Contraseña"
-          type="password"
-          placeholder="••••••••"
-          error={errors.password?.message}
-          {...register('password')}
-        />
+        <div className="relative">
+          <Input
+            id="password"
+            label="Contraseña"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="••••••••"
+            error={errors.password?.message}
+            className="pr-10"
+            {...register('password')}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-3 top-8 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            tabIndex={-1}
+          >
+            {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+          </button>
+        </div>
 
         {login.error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300">

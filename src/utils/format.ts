@@ -9,7 +9,13 @@ export function formatCurrency(amount: number): string {
 }
 
 export function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString('es-CL', {
+  // Date-only strings ("YYYY-MM-DD") are parsed as UTC by `new Date`, which shifts
+  // the day back in timezones behind UTC. Build them as local dates instead.
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
+  const parsed = dateOnly
+    ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+    : new Date(date)
+  return parsed.toLocaleDateString('es-CL', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

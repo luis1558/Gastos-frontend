@@ -73,7 +73,20 @@ export interface Debt {
   origin_date: string
   due_date?: string | null
   original_amount: number
+  paid_amount?: number
+  /** Total still owed today: principal remaining plus accrued interest. */
   remaining_amount?: number
+  principal_remaining?: number
+  accrued_interest?: number
+  total_interest?: number
+  interest_type: InterestType
+  rate_type: RateType
+  rate_period: RatePeriod
+  /** Rate the debt started with, in percent per `rate_period`. */
+  interest_rate: number
+  /** Rate in effect today (differs from `interest_rate` on variable debts). */
+  current_rate?: number
+  projected_total_at_due?: number | null
   description: string
   notes?: string | null
   closed_at?: string | null
@@ -96,8 +109,20 @@ export interface DebtPayment {
   updated_at: string
 }
 
+export interface DebtRateChange {
+  id: string
+  debt_id: string
+  effective_date: string
+  rate: number
+  notes?: string | null
+  created_at: string
+}
+
 export type PaymentMethod = 'cash' | 'debit_card' | 'credit_card' | 'transfer' | 'digital_wallet' | 'other'
 export type DebtType = 'receivable' | 'payable'
+export type InterestType = 'none' | 'simple' | 'compound'
+export type RateType = 'fixed' | 'variable'
+export type RatePeriod = 'monthly' | 'annual'
 export type DebtStatus = 'pending' | 'partially_paid' | 'paid' | 'cancelled'
 export type CounterpartyType = 'person' | 'bank' | 'business' | 'family' | 'friend' | 'other'
 

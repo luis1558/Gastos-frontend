@@ -25,6 +25,27 @@ export const DEBT_TYPES = [
   { value: 'payable', label: 'Por pagar' },
 ] as const
 
+export const DEBT_DIRECTIONS = [
+  { value: 'payable', label: 'Me prestaron', description: 'Yo debo pagar (por pagar)' },
+  { value: 'receivable', label: 'Presté dinero', description: 'Me deben pagar (por cobrar)' },
+] as const
+
+export const INTEREST_TYPES = [
+  { value: 'none', label: 'Sin interés', description: 'Se devuelve solo el monto prestado.' },
+  { value: 'simple', label: 'Interés simple', description: 'Se calcula solo sobre el capital inicial; los intereses no generan más intereses.' },
+  { value: 'compound', label: 'Interés compuesto', description: 'Los intereses se suman al capital, y el siguiente interés se calcula sobre una base mayor.' },
+] as const
+
+export const RATE_TYPES = [
+  { value: 'fixed', label: 'Tasa fija', description: 'El porcentaje no cambia durante todo el plazo.' },
+  { value: 'variable', label: 'Tasa variable', description: 'Cambia con el tiempo según un índice de referencia (ej. Euríbor). Tú registras los cambios.' },
+] as const
+
+export const RATE_PERIODS = [
+  { value: 'annual', label: '% anual' },
+  { value: 'monthly', label: '% mensual' },
+] as const
+
 export const DEBT_STATUSES: { value: string; label: string; color: string }[] = [
   { value: 'pending', label: 'Pendiente', color: 'yellow' },
   { value: 'partially_paid', label: 'Parcial', color: 'blue' },

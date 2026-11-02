@@ -12,7 +12,7 @@ import { Select } from '../../../components/ui/Select'
 import { Modal } from '../../../components/ui/Modal'
 import { Badge } from '../../../components/ui/Badge'
 import { Loading } from '../../../components/ui/Loading'
-import { formatCurrency, formatDate } from '../../../utils/format'
+import { formatCurrency, formatDate, todayLocalDate } from '../../../utils/format'
 import { DEBT_STATUSES, ROUTES } from '../../../utils/constants'
 import { FiArrowLeft, FiPlus, FiTrash2 } from 'react-icons/fi'
 import { formatRate, interestTypeLabel, rateTypeLabel } from '../interest'
@@ -33,13 +33,6 @@ const rateChangeSchema = z.object({
 
 type RateChangeForm = z.infer<typeof rateChangeSchema>
 
-function todayLocal(): string {
-  const now = new Date()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${now.getFullYear()}-${month}-${day}`
-}
-
 export function DebtDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [modalOpen, setModalOpen] = useState(false)
@@ -56,22 +49,22 @@ export function DebtDetailPage() {
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<PaymentForm>({
     resolver: zodResolver(paymentSchema),
-    defaultValues: { payment_date: todayLocal() },
+    defaultValues: { payment_date: todayLocalDate() },
   })
   const rateForm = useForm<RateChangeForm>({
     resolver: zodResolver(rateChangeSchema),
-    defaultValues: { effective_date: todayLocal() },
+    defaultValues: { effective_date: todayLocalDate() },
   })
 
   const onSubmit = (data: PaymentForm) => {
     createPayment.mutate(data, {
-      onSuccess: () => { setModalOpen(false); reset({ payment_date: todayLocal() }) },
+      onSuccess: () => { setModalOpen(false); reset({ payment_date: todayLocalDate() }) },
     })
   }
 
   const onSubmitRate = (data: RateChangeForm) => {
     createRateChange.mutate(data, {
-      onSuccess: () => { setRateModalOpen(false); rateForm.reset({ effective_date: todayLocal() }) },
+      onSuccess: () => { setRateModalOpen(false); rateForm.reset({ effective_date: todayLocalDate() }) },
     })
   }
 

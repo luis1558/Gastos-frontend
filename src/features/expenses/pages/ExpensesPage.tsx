@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useExpenses, useCreateExpense, useUpdateExpense, useDeleteExpense, useCategories } from '../hooks'
@@ -13,6 +13,7 @@ import { Loading } from '../../../components/ui/Loading'
 import { PageHeader } from '../../../components/ui/PageHeader'
 import { formatCurrency, formatDate, getCurrentYear, getCurrentMonth } from '../../../utils/format'
 import { MONTH_NAMES, PAYMENT_METHODS, ROUTES } from '../../../utils/constants'
+import { AvailableWarning } from '../../goals/components/AvailableWarning'
 import { FiPlus, FiTrash2, FiSettings, FiCalendar, FiTag, FiEdit2 } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import type { Expense } from '../../../types/models'
@@ -75,10 +76,11 @@ export function ExpensesPage() {
     )
   }
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ExpenseForm>({
+  const { register, handleSubmit, reset, control, formState: { errors } } = useForm<ExpenseForm>({
     resolver: zodResolver(expenseSchema),
     defaultValues: { period_month: month, period_year: year },
   })
+  const newAmount = useWatch({ control, name: 'amount' })
 
   const { register: registerEdit, handleSubmit: handleEditSubmit, reset: resetEdit, formState: { errors: editErrors } } = useForm<ExpenseForm>({
     resolver: zodResolver(expenseSchema),
@@ -316,6 +318,7 @@ export function ExpensesPage() {
             error={errors.amount?.message}
             {...register('amount', { valueAsNumber: true })}
           />
+          <AvailableWarning amount={newAmount} />
           <Input
             id="description"
             label="Descripción"

@@ -14,7 +14,7 @@ import { EmptyState } from '../../../components/ui/EmptyState'
 import { Loading } from '../../../components/ui/Loading'
 import { ChoiceCards } from '../../../components/ui/ChoiceCards'
 import { PageHeader } from '../../../components/ui/PageHeader'
-import { formatCurrency } from '../../../utils/format'
+import { formatCurrency, todayLocalDate } from '../../../utils/format'
 import { DEBT_TYPES, DEBT_STATUSES, DEBT_DIRECTIONS, ROUTES } from '../../../utils/constants'
 import { FiPlus, FiUsers, FiArrowRight } from 'react-icons/fi'
 import { InterestFields } from '../components/InterestFields'
@@ -41,16 +41,9 @@ const debtSchema = z.object({
 
 type DebtForm = z.infer<typeof debtSchema>
 
-function todayLocal(): string {
-  const now = new Date()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${now.getFullYear()}-${month}-${day}`
-}
-
 const emptyForm = (): Partial<DebtForm> => ({
   type: 'payable',
-  origin_date: todayLocal(),
+  origin_date: todayLocalDate(),
   interest_type: 'none',
   rate_type: 'fixed',
   rate_period: 'annual',

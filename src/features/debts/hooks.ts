@@ -24,6 +24,7 @@ export function useCreateDebt() {
     mutationFn: debtsApi.create,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['debts'] })
+      qc.invalidateQueries({ queryKey: ['alerts'] })
       qc.invalidateQueries({ queryKey: ['debt-summary'] })
       toast.success('Deuda registrada')
     },
@@ -38,6 +39,7 @@ export function useUpdateDebt() {
       debtsApi.update(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['debts'] })
+      qc.invalidateQueries({ queryKey: ['alerts'] })
       qc.invalidateQueries({ queryKey: ['debt'] })
     },
   })
@@ -68,6 +70,7 @@ export function useCreatePayment(debtId: string) {
       qc.invalidateQueries({ queryKey: ['payments', debtId] })
       qc.invalidateQueries({ queryKey: ['debt', debtId] })
       qc.invalidateQueries({ queryKey: ['debts'] })
+      qc.invalidateQueries({ queryKey: ['alerts'] })
       qc.invalidateQueries({ queryKey: ['debt-summary'] })
       toast.success('Pago registrado')
     },

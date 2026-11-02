@@ -40,6 +40,7 @@ function useInvalidateGoals() {
   return (goalId?: string) => {
     qc.invalidateQueries({ queryKey: ['goals'] })
     qc.invalidateQueries({ queryKey: ['goal-overview'] })
+    qc.invalidateQueries({ queryKey: ['alerts'] })
     if (goalId) {
       qc.invalidateQueries({ queryKey: ['goal', goalId] })
       qc.invalidateQueries({ queryKey: ['goal-contributions', goalId] })

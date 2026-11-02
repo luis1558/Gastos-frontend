@@ -289,3 +289,26 @@ export interface CardPurchase {
   description: string
   category_name: string
 }
+
+export interface AlertItem {
+  /** Stable key: kind + entity + due date. */
+  id: string
+  kind: 'debt' | 'fixed_payment' | 'card' | 'goal'
+  entity_id: string
+  title: string
+  detail?: string | null
+  /** Missing when the amount is not known yet (a card without its statement amount). */
+  amount?: number | null
+  due_date: string
+  /** Negative when the due date already passed. */
+  days_left: number
+  severity: 'overdue' | 'today' | 'soon'
+  /** Money already set aside in an active goal linked to this item. */
+  saved_amount?: number | null
+}
+
+export interface AlertsResponse {
+  items: AlertItem[]
+  total: number
+  overdue: number
+}

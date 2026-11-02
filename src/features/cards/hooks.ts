@@ -22,7 +22,7 @@ export function useCardPurchases(id: string | undefined, year: number, month: nu
 function useInvalidateAfterPayment() {
   const qc = useQueryClient()
   return () => {
-    for (const key of ['cards', 'expenses', 'goal-overview', 'goals', 'monthly-summary', 'yearly-summary', 'month-forecast']) {
+    for (const key of ['cards', 'alerts', 'expenses', 'goal-overview', 'goals', 'monthly-summary', 'yearly-summary', 'month-forecast']) {
       qc.invalidateQueries({ queryKey: [key] })
     }
   }
@@ -34,6 +34,7 @@ export function useCreateCard() {
     mutationFn: cardsApi.create,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cards'] })
+      qc.invalidateQueries({ queryKey: ['alerts'] })
       toast.success('Tarjeta creada')
     },
     onError: () => toast.error('No se pudo crear la tarjeta'),
@@ -46,6 +47,7 @@ export function useUpdateCard(year: number, month: number) {
     mutationFn: ({ id, data }: { id: string; data: CardChanges }) => cardsApi.update(id, year, month, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cards'] })
+      qc.invalidateQueries({ queryKey: ['alerts'] })
       toast.success('Tarjeta actualizada')
     },
     onError: () => toast.error('No se pudo actualizar la tarjeta'),
@@ -58,6 +60,7 @@ export function useDeleteCard() {
     mutationFn: cardsApi.remove,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cards'] })
+      qc.invalidateQueries({ queryKey: ['alerts'] })
       qc.invalidateQueries({ queryKey: ['goals'] })
       toast.success('Tarjeta eliminada')
     },
@@ -71,6 +74,7 @@ export function useSetStatement(year: number, month: number) {
     mutationFn: ({ id, amount }: { id: string; amount: number }) => cardsApi.setStatement(id, year, month, amount),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cards'] })
+      qc.invalidateQueries({ queryKey: ['alerts'] })
       toast.success('Monto guardado')
     },
     onError: () => toast.error('No se pudo guardar el monto'),

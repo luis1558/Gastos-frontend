@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/authStore'
 import { useThemeStore } from '../stores/themeStore'
 import { ROUTES } from '../utils/constants'
 import { classNames } from '../utils/format'
+import { NotificationBell } from '../features/alerts/components/NotificationBell'
 
 const navItems = [
   { to: ROUTES.DASHBOARD, label: 'Dashboard', icon: FiLayout },
@@ -49,7 +50,7 @@ export function AppLayout() {
           />
           <span className="font-semibold text-gray-900 dark:text-gray-100">Gastos</span>
         </div>
-        <div className="w-10" />
+        <NotificationBell />
       </header>
 
       {/* Mobile sidebar overlay */}
@@ -105,6 +106,10 @@ export function AppLayout() {
             </NavLink>
           ))}
         </nav>
+
+        <div className="hidden px-3 pb-1 lg:block">
+          <NotificationBell variant="sidebar" />
+        </div>
 
         {/* Theme toggle */}
         <div className="px-3 pb-2">

@@ -10,6 +10,14 @@ export function useCards(year: number, month: number) {
   })
 }
 
+export function useCardPurchases(id: string | undefined, year: number, month: number) {
+  return useQuery({
+    queryKey: ['card-purchases', id, year, month],
+    queryFn: () => cardsApi.purchases(id!, year, month),
+    enabled: !!id,
+  })
+}
+
 // Paying (or undoing) may move an expense, which changes the balance, goals and monthly reports.
 function useInvalidateAfterPayment() {
   const qc = useQueryClient()

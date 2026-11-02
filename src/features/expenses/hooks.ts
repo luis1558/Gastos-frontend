@@ -23,6 +23,8 @@ export function useCreateExpense() {
       toast.success('Gasto registrado')
       qc.invalidateQueries({ queryKey: ['expenses'] })
       qc.invalidateQueries({ queryKey: ['goal-overview'] })
+      qc.invalidateQueries({ queryKey: ['cards'] })
+      qc.invalidateQueries({ queryKey: ['card-purchases'] })
     },
     onError: () => toast.error('Error al registrar el gasto'),
   })
@@ -56,6 +58,8 @@ export function useUpdateExpense() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['expenses'] })
       qc.invalidateQueries({ queryKey: ['goal-overview'] })
+      qc.invalidateQueries({ queryKey: ['cards'] })
+      qc.invalidateQueries({ queryKey: ['card-purchases'] })
     },
   })
 }
@@ -80,6 +84,8 @@ export function useDeleteExpense() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['expenses'] })
       qc.invalidateQueries({ queryKey: ['goal-overview'] })
+      qc.invalidateQueries({ queryKey: ['cards'] })
+      qc.invalidateQueries({ queryKey: ['card-purchases'] })
     },
   })
 }

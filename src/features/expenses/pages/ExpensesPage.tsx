@@ -14,6 +14,7 @@ import { PageHeader } from '../../../components/ui/PageHeader'
 import { formatCurrency, formatDate, getCurrentYear, getCurrentMonth } from '../../../utils/format'
 import { MONTH_NAMES, PAYMENT_METHODS, ROUTES } from '../../../utils/constants'
 import { AvailableWarning } from '../../goals/components/AvailableWarning'
+import { CardSelect } from '../../cards/components/CardSelect'
 import { FiPlus, FiTrash2, FiSettings, FiCalendar, FiTag, FiEdit2 } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import type { Expense } from '../../../types/models'
@@ -24,6 +25,7 @@ const expenseSchema = z.object({
   description: z.string().min(2, 'Mínimo 2 caracteres'),
   expense_date: z.string().min(1, 'Fecha requerida'),
   payment_method: z.string().optional(),
+  card_id: z.string().optional(),
   notes: z.string().optional(),
   period_month: z.number().int().min(1).max(12),
   period_year: z.number().int().min(2000).max(2100),
@@ -81,10 +83,13 @@ export function ExpensesPage() {
     defaultValues: { period_month: month, period_year: year },
   })
   const newAmount = useWatch({ control, name: 'amount' })
+  const newPaymentMethod = useWatch({ control, name: 'payment_method' })
 
-  const { register: registerEdit, handleSubmit: handleEditSubmit, reset: resetEdit, formState: { errors: editErrors } } = useForm<ExpenseForm>({
+  const { register: registerEdit, handleSubmit: handleEditSubmit, reset: resetEdit, control: editControl, formState: { errors: editErrors } } = useForm<ExpenseForm>({
     resolver: zodResolver(expenseSchema),
   })
+
+  const editPaymentMethod = useWatch({ control: editControl, name: 'payment_method' })
 
   const openModal = () => {
     reset({ period_month: month, period_year: year })
@@ -99,6 +104,7 @@ export function ExpensesPage() {
       description: expense.description,
       expense_date: expense.expense_date.slice(0, 10),
       payment_method: expense.payment_method || '',
+      card_id: expense.card_id || '',
       notes: expense.notes || '',
       period_month: expense.period_month || expense.month,
       period_year: expense.period_year || expense.year,
@@ -108,7 +114,7 @@ export function ExpensesPage() {
   const onEditSubmit = (data: ExpenseForm) => {
     if (!editingExpense) return
     updateExpense.mutate(
-      { id: editingExpense.id, data: data as any },
+      { id: editingExpense.id, data: { ...data, payment_method: data.payment_method || undefined, card_id: data.payment_method === 'credit_card' && data.card_id ? data.card_id : null } as any },
       { onSuccess: () => setEditingExpense(null) },
     )
   }
@@ -121,7 +127,7 @@ export function ExpensesPage() {
   }
 
   const onSubmit = (data: ExpenseForm) => {
-    createExpense.mutate(data as any, {
+    createExpense.mutate({ ...data, card_id: data.payment_method === 'credit_card' && data.card_id ? data.card_id : undefined } as any, {
       onSuccess: () => {
         setModalOpen(false)
         reset()
@@ -181,7 +187,7 @@ export function ExpensesPage() {
               />
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{expense.description}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{expense.category_name || expense.category_slug}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{expense.category_name || expense.category_slug}{expense.card_name ? ` · ${expense.card_name}` : ''}</p>
               </div>
               <div className="text-right">
                 <p className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(expense.amount)}</p>
@@ -340,6 +346,7 @@ export function ExpensesPage() {
             placeholder="Seleccionar (opcional)"
             {...register('payment_method')}
           />
+          <CardSelect id="card_id" paymentMethod={newPaymentMethod} {...register('card_id')} />
           <Input
             id="notes"
             label="Notas (opcional)"
@@ -418,6 +425,7 @@ export function ExpensesPage() {
             placeholder="Seleccionar (opcional)"
             {...registerEdit('payment_method')}
           />
+          <CardSelect id="edit_card_id" paymentMethod={editPaymentMethod} {...registerEdit('card_id')} />
           <Input
             id="edit_notes"
             label="Notas (opcional)"

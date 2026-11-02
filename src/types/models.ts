@@ -47,6 +47,8 @@ export interface Expense {
   description: string
   payment_method?: PaymentMethod | null
   notes?: string | null
+  card_id?: string | null
+  card_name?: string | null
   created_at: string
   updated_at: string
 }
@@ -275,4 +277,15 @@ export interface Card {
   status: 'undefined' | 'pending' | 'paid'
   statement_amount?: number | null
   paid_on?: string | null
+  /** Purchases registered with this card in the requested month (a hint for the statement amount). */
+  purchases_total: number
+  purchases_count: number
+}
+
+export interface CardPurchase {
+  id: string
+  expense_date: string
+  amount: number
+  description: string
+  category_name: string
 }

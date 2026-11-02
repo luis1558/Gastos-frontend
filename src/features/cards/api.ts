@@ -1,5 +1,5 @@
 import { api } from '../../api/client'
-import type { Card } from '../../types/models'
+import type { Card, CardPurchase } from '../../types/models'
 
 export interface CardInput {
   name: string
@@ -23,6 +23,9 @@ export interface CardPayInput {
 
 export const cardsApi = {
   list: (year: number, month: number) => api.get<Card[]>('/cards', { year, month }),
+
+  purchases: (id: string, year: number, month: number) =>
+    api.get<CardPurchase[]>(`/cards/${id}/purchases`, { year, month }),
 
   create: (data: CardInput) => api.post<Card>('/cards', data),
 

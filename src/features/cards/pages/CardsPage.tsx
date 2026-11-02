@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FiPlus, FiEdit2, FiChevronLeft, FiChevronRight, FiLayers, FiCheck } from 'react-icons/fi'
+import { FiPlus, FiEdit2, FiChevronLeft, FiChevronRight, FiLayers, FiCheck, FiShoppingCart } from 'react-icons/fi'
 import { Card as UiCard } from '../../../components/ui/Card'
 import { Button } from '../../../components/ui/Button'
 import { Badge } from '../../../components/ui/Badge'
@@ -11,6 +11,8 @@ import type { Card } from '../../../types/models'
 import { useCards, useUndoCardPayment } from '../hooks'
 import { CardFormModal } from '../components/CardFormModal'
 import { StatementModal } from '../components/StatementModal'
+import { CardPurchaseModal } from '../components/CardPurchaseModal'
+import { CardPurchasesModal } from '../components/CardPurchasesModal'
 import { PayCardModal } from '../components/PayCardModal'
 
 export function CardsPage() {
@@ -20,6 +22,8 @@ export function CardsPage() {
   const [editing, setEditing] = useState<Card | null>(null)
   const [statementFor, setStatementFor] = useState<Card | null>(null)
   const [paying, setPaying] = useState<Card | null>(null)
+  const [viewingPurchases, setViewingPurchases] = useState<Card | null>(null)
+  const [addingPurchase, setAddingPurchase] = useState<Card | null>(null)
 
   const { data: cards, isLoading } = useCards(year, month)
   const undo = useUndoCardPayment()
@@ -91,6 +95,40 @@ export function CardsPage() {
             {paid && card.paid_on ? `Pagada el ${formatDate(card.paid_on)}` : `Vence el ${formatDate(card.due_date)}`}
           </p>
         </div>
+
+        {card.is_active && (
+          <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+            {card.tracks_purchases ? (
+              <>
+                <div className="flex items-baseline justify-between gap-2 text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">
+                    Compras del mes{card.purchases_count > 0 ? ` (${card.purchases_count})` : ''}
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(Number(card.purchases_total))}</span>
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <Button variant="secondary" size="sm" className="min-h-11 flex-1" onClick={() => setAddingPurchase(card)}>
+                    <FiShoppingCart size={14} className="mr-1.5" /> Registrar compra
+                  </Button>
+                  <Button variant="ghost" size="sm" className="min-h-11" onClick={() => setViewingPurchases(card)}>
+                    Ver compras
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                <p>Esta tarjeta solo registra el pago. Para anotar sus compras, cámbiala a «Registro cada compra».</p>
+                <button
+                  type="button"
+                  onClick={() => setEditing(card)}
+                  className="mt-1 min-h-11 font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+                >
+                  Cambiar cómo la llevo
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {card.is_active &&
           (paid ? (
@@ -197,6 +235,17 @@ export function CardsPage() {
       <CardFormModal isOpen={!!editing} onClose={() => setEditing(null)} card={editing} year={year} month={month} />
       <StatementModal card={statementFor} year={year} month={month} onClose={() => setStatementFor(null)} />
       <PayCardModal card={paying} year={year} month={month} onClose={() => setPaying(null)} />
+      <CardPurchasesModal
+        card={viewingPurchases}
+        year={year}
+        month={month}
+        onClose={() => setViewingPurchases(null)}
+        onAdd={(c) => {
+          setViewingPurchases(null)
+          setAddingPurchase(c)
+        }}
+      />
+      <CardPurchaseModal card={addingPurchase} year={year} month={month} onClose={() => setAddingPurchase(null)} />
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { Modal } from '../../../components/ui/Modal'
 import { Button } from '../../../components/ui/Button'
 import { Input } from '../../../components/ui/Input'
-import { formatMonthYear } from '../../../utils/format'
+import { formatCurrency, formatMonthYear } from '../../../utils/format'
 import type { Card } from '../../../types/models'
 import { useSetStatement } from '../hooks'
 
@@ -24,7 +24,7 @@ export function StatementModal({ card, year, month, onClose }: StatementModalPro
 
 function StatementFormBody({ card, year, month, onClose }: Required<StatementModalProps> & { card: Card }) {
   const setStatement = useSetStatement(year, month)
-  const { register, handleSubmit, setError, formState: { errors } } = useForm<StatementForm>({
+  const { register, handleSubmit, setError, setValue, formState: { errors } } = useForm<StatementForm>({
     defaultValues: { amount: card.statement_amount ? Number(card.statement_amount) : undefined },
   })
 
@@ -38,7 +38,7 @@ function StatementFormBody({ card, year, month, onClose }: Required<StatementMod
     <Modal isOpen onClose={onClose} title={`Extracto de ${card.name}`} size="lg">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          Escribe el valor a pagar de {formatMonthYear(year, month)} tal como aparece en el extracto de tu banco.
+          Escribe el valor a pagar de {formatMonthYear(year, month)} tal como aparece en el extracto de tu banco. Puede incluir intereses y cuotas que no están en tus compras.
         </p>
         <Input
           id="statement_amount"
@@ -51,6 +51,16 @@ function StatementFormBody({ card, year, month, onClose }: Required<StatementMod
           error={errors.amount?.message}
           {...register('amount', { valueAsNumber: true })}
         />
+        {Number(card.purchases_total) > 0 && (
+          <button
+            type="button"
+            onClick={() => setValue('amount', Math.round(Number(card.purchases_total) * 100) / 100, { shouldValidate: true })}
+            className="-mt-2 min-h-11 text-left text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
+          >
+            Usar mis compras registradas ({formatCurrency(Number(card.purchases_total))}, {card.purchases_count}{' '}
+            {card.purchases_count === 1 ? 'compra' : 'compras'})
+          </button>
+        )}
         <Button type="submit" loading={setStatement.isPending} className="w-full min-h-11">
           Guardar monto
         </Button>

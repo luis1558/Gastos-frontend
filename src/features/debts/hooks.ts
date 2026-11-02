@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { debtsApi, counterpartiesApi } from './api'
 
 export function useDebts(type?: string, status?: string) {
@@ -21,7 +22,12 @@ export function useCreateDebt() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: debtsApi.create,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['debts'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['debts'] })
+      qc.invalidateQueries({ queryKey: ['debt-summary'] })
+      toast.success('Deuda registrada')
+    },
+    onError: () => toast.error('No se pudo registrar la deuda'),
   })
 }
 
@@ -63,7 +69,52 @@ export function useCreatePayment(debtId: string) {
       qc.invalidateQueries({ queryKey: ['debt', debtId] })
       qc.invalidateQueries({ queryKey: ['debts'] })
       qc.invalidateQueries({ queryKey: ['debt-summary'] })
+      toast.success('Pago registrado')
     },
+    onError: () => toast.error('No se pudo registrar el pago. Revisa que el monto no supere el saldo.'),
+  })
+}
+
+export function useRateChanges(debtId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['rate-changes', debtId],
+    queryFn: () => debtsApi.rateChanges(debtId),
+    enabled: !!debtId && enabled,
+  })
+}
+
+function useInvalidateDebt(debtId: string) {
+  const qc = useQueryClient()
+  return () => {
+    qc.invalidateQueries({ queryKey: ['rate-changes', debtId] })
+    qc.invalidateQueries({ queryKey: ['debt', debtId] })
+    qc.invalidateQueries({ queryKey: ['debts'] })
+    qc.invalidateQueries({ queryKey: ['debt-summary'] })
+  }
+}
+
+export function useCreateRateChange(debtId: string) {
+  const invalidate = useInvalidateDebt(debtId)
+  return useMutation({
+    mutationFn: (data: Pick<import('../../types/models').DebtRateChange, 'effective_date' | 'rate'>) =>
+      debtsApi.createRateChange(debtId, data),
+    onSuccess: () => {
+      invalidate()
+      toast.success('Cambio de tasa registrado')
+    },
+    onError: () => toast.error('No se pudo registrar el cambio. Revisa que no exista otro en esa fecha.'),
+  })
+}
+
+export function useDeleteRateChange(debtId: string) {
+  const invalidate = useInvalidateDebt(debtId)
+  return useMutation({
+    mutationFn: (rateChangeId: string) => debtsApi.deleteRateChange(debtId, rateChangeId),
+    onSuccess: () => {
+      invalidate()
+      toast.success('Cambio de tasa eliminado')
+    },
+    onError: () => toast.error('No se pudo eliminar el cambio de tasa'),
   })
 }
 

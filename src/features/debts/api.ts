@@ -1,5 +1,5 @@
 import { api } from '../../api/client'
-import type { Debt, DebtPayment, Counterparty, DebtSummary } from '../../types/models'
+import type { Debt, DebtPayment, DebtRateChange, Counterparty, DebtSummary } from '../../types/models'
 
 export const debtsApi = {
   list: (type?: string, status?: string) =>
@@ -17,6 +17,14 @@ export const debtsApi = {
 
   createPayment: (debtId: string, data: Partial<DebtPayment>) =>
     api.post<DebtPayment>(`/debts/${debtId}/payments`, data),
+
+  rateChanges: (debtId: string) => api.get<DebtRateChange[]>(`/debts/${debtId}/rate-changes`),
+
+  createRateChange: (debtId: string, data: Pick<DebtRateChange, 'effective_date' | 'rate'>) =>
+    api.post<DebtRateChange>(`/debts/${debtId}/rate-changes`, data),
+
+  deleteRateChange: (debtId: string, rateChangeId: string) =>
+    api.delete<void>(`/debts/${debtId}/rate-changes/${rateChangeId}`),
 }
 
 export const counterpartiesApi = {

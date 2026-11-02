@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link } from 'react-router-dom'
@@ -12,10 +12,14 @@ import { Modal } from '../../../components/ui/Modal'
 import { Badge } from '../../../components/ui/Badge'
 import { EmptyState } from '../../../components/ui/EmptyState'
 import { Loading } from '../../../components/ui/Loading'
+import { ChoiceCards } from '../../../components/ui/ChoiceCards'
 import { PageHeader } from '../../../components/ui/PageHeader'
 import { formatCurrency } from '../../../utils/format'
-import { DEBT_TYPES, DEBT_STATUSES, ROUTES } from '../../../utils/constants'
+import { DEBT_TYPES, DEBT_STATUSES, DEBT_DIRECTIONS, ROUTES } from '../../../utils/constants'
 import { FiPlus, FiUsers, FiArrowRight } from 'react-icons/fi'
+import { InterestFields } from '../components/InterestFields'
+import { formatRate, interestTypeLabel } from '../interest'
+import type { Debt } from '../../../types/models'
 
 const debtSchema = z.object({
   counterparty_id: z.string().min(1, 'Selecciona una contraparte'),
@@ -25,9 +29,37 @@ const debtSchema = z.object({
   origin_date: z.string().min(1, 'Fecha requerida'),
   due_date: z.string().optional(),
   notes: z.string().optional(),
-})
+  interest_type: z.enum(['none', 'simple', 'compound']),
+  rate_type: z.enum(['fixed', 'variable']),
+  rate_period: z.enum(['monthly', 'annual']),
+  // Empty number inputs produce NaN, which must not block debts without interest.
+  interest_rate: z.number().or(z.nan()).optional(),
+}).refine(
+  (data) => data.interest_type === 'none' || (Number.isFinite(data.interest_rate) && Number(data.interest_rate) > 0),
+  { path: ['interest_rate'], message: 'Ingresa una tasa mayor a 0' },
+)
 
 type DebtForm = z.infer<typeof debtSchema>
+
+function todayLocal(): string {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}
+
+const emptyForm = (): Partial<DebtForm> => ({
+  type: 'payable',
+  origin_date: todayLocal(),
+  interest_type: 'none',
+  rate_type: 'fixed',
+  rate_period: 'annual',
+})
+
+function describeInterest(debt: Debt): string | null {
+  if (debt.interest_type === 'none') return null
+  return `${interestTypeLabel(debt.interest_type)} · ${formatRate(debt.current_rate ?? debt.interest_rate, debt.rate_period)}${debt.rate_type === 'variable' ? ' · variable' : ''}`
+}
 
 export function DebtsListPage() {
   const [filterType, setFilterType] = useState('')
@@ -39,13 +71,29 @@ export function DebtsListPage() {
   const { data: counterparties } = useCounterparties()
   const createDebt = useCreateDebt()
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<DebtForm>({
+  const { register, handleSubmit, reset, control, setValue, formState: { errors } } = useForm<DebtForm>({
     resolver: zodResolver(debtSchema),
+    defaultValues: emptyForm(),
   })
+  const values = useWatch({ control }) as DebtForm
 
   const onSubmit = (data: DebtForm) => {
-    createDebt.mutate(data as any, {
-      onSuccess: () => { setModalOpen(false); reset() },
+    const hasInterest = data.interest_type !== 'none'
+    const payload: Partial<Debt> = {
+      counterparty_id: data.counterparty_id,
+      type: data.type,
+      original_amount: data.original_amount,
+      description: data.description,
+      origin_date: data.origin_date,
+      due_date: data.due_date || undefined,
+      notes: data.notes || undefined,
+      interest_type: data.interest_type,
+      rate_type: hasInterest ? data.rate_type : 'fixed',
+      rate_period: data.rate_period,
+      interest_rate: hasInterest ? Number(data.interest_rate) : 0,
+    }
+    createDebt.mutate(payload, {
+      onSuccess: () => { setModalOpen(false); reset(emptyForm()) },
     })
   }
 
@@ -115,15 +163,18 @@ export function DebtsListPage() {
           {debts.map((debt) => (
             <Link key={debt.id} to={ROUTES.DEBT_DETAIL(debt.id)}>
               <Card className="flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
-                <div className={`w-1 h-14 rounded-full shrink-0 ${debt.type === 'receivable' ? 'bg-green-400' : 'bg-red-400'}`} />
+                <div className={`w-1 self-stretch min-h-14 rounded-full shrink-0 ${debt.type === 'receivable' ? 'bg-green-400' : 'bg-red-400'}`} />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{debt.description}</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100 line-clamp-2 break-words">{debt.description}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{debt.counterparty_name || 'Sin contraparte'}</p>
+            {describeInterest(debt) && (
+              <p className="mt-0.5 text-xs text-indigo-600 dark:text-indigo-400">{describeInterest(debt)}</p>
+            )}
               </div>
-              <div className="text-right">
+              <div className="text-right shrink-0">
                 <p className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(debt.original_amount)}</p>
                 {debt.remaining_amount !== undefined && debt.remaining_amount > 0 && (
-                  <p className="text-xs text-gray-400 dark:text-gray-500">Restan: {formatCurrency(debt.remaining_amount)}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{debt.interest_type !== 'none' ? 'Saldo' : 'Restan'}: {formatCurrency(debt.remaining_amount)}</p>
                 )}
                 </div>
                 <div className="hidden sm:block">{getStatusBadge(debt.status)}</div>
@@ -142,15 +193,13 @@ export function DebtsListPage() {
         </Card>
       )}
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Nueva Deuda">
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Nueva Deuda" size="lg">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Select
-            id="type"
-            label="Tipo"
-            options={DEBT_TYPES.map((t) => ({ value: t.value, label: t.label }))}
-            placeholder="Seleccionar"
-            error={errors.type?.message}
-            {...register('type')}
+          <ChoiceCards
+            label="¿Qué tipo de deuda es?"
+            value={values.type}
+            options={DEBT_DIRECTIONS}
+            onChange={(value) => setValue('type', value, { shouldValidate: true })}
           />
           <Select
             id="counterparty_id"
@@ -168,6 +217,20 @@ export function DebtsListPage() {
             placeholder="0"
             error={errors.original_amount?.message}
             {...register('original_amount', { valueAsNumber: true })}
+          />
+          <InterestFields
+            values={{
+              original_amount: values.original_amount,
+              origin_date: values.origin_date,
+              due_date: values.due_date,
+              interest_type: values.interest_type,
+              rate_type: values.rate_type,
+              rate_period: values.rate_period,
+              interest_rate: values.interest_rate,
+            }}
+            register={register}
+            errors={errors}
+            onChange={(field, value) => setValue(field, value as never, { shouldValidate: true })}
           />
           <Input
             id="description"

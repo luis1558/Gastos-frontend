@@ -211,6 +211,8 @@ export interface Goal {
   notes?: string | null
   debt_id?: string | null
   debt_label?: string | null
+  fixed_payment_id?: string | null
+  fixed_payment_label?: string | null
   saved_amount: number
   remaining_amount: number
   progress_percent: number
@@ -236,4 +238,20 @@ export interface GoalOverview {
   reserved: number
   /** balance - reserved: what can still be spent. */
   available: number
+}
+
+export interface FixedPayment {
+  id: string
+  name: string
+  amount: number
+  day_of_month: number
+  category_id: string
+  category_name: string
+  notes?: string | null
+  is_active: boolean
+  /** Due date inside the requested month (day clamped for short months). */
+  due_date: string
+  status: 'pending' | 'paid'
+  paid_amount?: number | null
+  paid_on?: string | null
 }

@@ -8,6 +8,7 @@ export interface GoalInput {
   target_date?: string | null
   notes?: string | null
   debt_id?: string | null
+  fixed_payment_id?: string | null
 }
 
 export interface GoalChanges {

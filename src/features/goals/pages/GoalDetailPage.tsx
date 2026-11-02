@@ -67,7 +67,7 @@ export function GoalDetailPage() {
         <GoalKindIcon kind={goal.kind} size="lg" />
         <div className="min-w-0 flex-1">
           <h1 className="break-words text-2xl font-bold text-gray-900 dark:text-gray-100">{goal.name}</h1>
-          <p className="mt-1 text-gray-500 dark:text-gray-400">{goal.debt_label || kindLabel}</p>
+          <p className="mt-1 text-gray-500 dark:text-gray-400">{goal.debt_label || goal.fixed_payment_label || kindLabel}</p>
         </div>
         {!active && <Badge color="green">Cumplida</Badge>}
       </div>

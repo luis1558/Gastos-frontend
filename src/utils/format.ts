@@ -22,6 +22,25 @@ export function formatDate(date: string): string {
   })
 }
 
+function parseLocalDate(date: string): Date {
+  const [year, month, day] = date.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+/** Today as YYYY-MM-DD in the user's timezone (toISOString would use UTC and can show tomorrow). */
+export function todayLocalDate(): string {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}
+
+/** Calendar days from today until a YYYY-MM-DD date; negative when it already passed. */
+export function daysUntil(date: string): number {
+  const today = parseLocalDate(todayLocalDate())
+  return Math.round((parseLocalDate(date).getTime() - today.getTime()) / 86_400_000)
+}
+
 export function formatMonthYear(year: number, month: number): string {
   const date = new Date(year, month - 1)
   return date.toLocaleDateString('es-CL', { year: 'numeric', month: 'long' })

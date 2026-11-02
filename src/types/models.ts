@@ -197,3 +197,43 @@ export interface RecurringExpenses {
   checked_months: number
   items: RecurringExpenseItem[]
 }
+
+export type GoalKind = 'debt' | 'card' | 'fixed_payment' | 'personal'
+export type GoalStatus = 'active' | 'completed'
+
+export interface Goal {
+  id: string
+  kind: GoalKind
+  status: GoalStatus
+  name: string
+  target_amount: number
+  target_date?: string | null
+  notes?: string | null
+  debt_id?: string | null
+  debt_label?: string | null
+  saved_amount: number
+  remaining_amount: number
+  progress_percent: number
+  created_at: string
+  closed_at?: string | null
+}
+
+export interface GoalContribution {
+  id: string
+  goal_id: string
+  contribution_date: string
+  /** Positive when money was set aside, negative when it was taken back. */
+  amount: number
+  notes?: string | null
+  created_at: string
+}
+
+export interface GoalOverview {
+  opening_balance: number
+  total_income: number
+  total_expenses: number
+  balance: number
+  reserved: number
+  /** balance - reserved: what can still be spent. */
+  available: number
+}

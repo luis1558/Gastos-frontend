@@ -13,16 +13,21 @@ interface ChoiceCardsProps<T extends string> {
   onChange: (value: T) => void
   /** Cards sit side by side from the `sm` breakpoint up; they always stack on phones. */
   columns?: 2 | 3
+  /** Compact segmented control: always side by side, no descriptions. */
+  inline?: boolean
 }
 
-export function ChoiceCards<T extends string>({ label, value, options, onChange, columns = 2 }: ChoiceCardsProps<T>) {
+export function ChoiceCards<T extends string>({ label, value, options, onChange, columns = 2, inline = false }: ChoiceCardsProps<T>) {
   return (
     <div>
       {label && <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</p>}
       <div
         role="radiogroup"
         aria-label={label}
-        className={classNames('grid grid-cols-1 gap-2', columns === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2')}
+        className={classNames(
+          'grid gap-2',
+          inline ? 'grid-cols-2' : classNames('grid-cols-1', columns === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'),
+        )}
       >
         {options.map((option) => {
           const selected = option.value === value
@@ -41,7 +46,7 @@ export function ChoiceCards<T extends string>({ label, value, options, onChange,
               )}
             >
               <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">{option.label}</span>
-              {option.description && (
+              {option.description && !inline && (
                 <span className="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">{option.description}</span>
               )}
             </button>

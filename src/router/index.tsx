@@ -14,6 +14,7 @@ const IncomesPage = lazy(() => import('../features/incomes/pages/IncomesPage').t
 const DebtsListPage = lazy(() => import('../features/debts/pages/DebtsListPage').then(m => ({ default: m.DebtsListPage })))
 const DebtDetailPage = lazy(() => import('../features/debts/pages/DebtDetailPage').then(m => ({ default: m.DebtDetailPage })))
 const CounterpartiesPage = lazy(() => import('../features/debts/pages/CounterpartiesPage').then(m => ({ default: m.CounterpartiesPage })))
+const CardsPage = lazy(() => import('../features/cards/pages/CardsPage').then(m => ({ default: m.CardsPage })))
 const FixedPaymentsPage = lazy(() => import('../features/fixed-payments/pages/FixedPaymentsPage').then(m => ({ default: m.FixedPaymentsPage })))
 const GoalsPage = lazy(() => import('../features/goals/pages/GoalsPage').then(m => ({ default: m.GoalsPage })))
 const GoalDetailPage = lazy(() => import('../features/goals/pages/GoalDetailPage').then(m => ({ default: m.GoalDetailPage })))
@@ -80,6 +81,7 @@ export const router = createBrowserRouter([
               { path: ROUTES.INCOMES, element: <SuspenseWrapper><IncomesPage /></SuspenseWrapper> },
               { path: ROUTES.DEBTS, element: <SuspenseWrapper><DebtsListPage /></SuspenseWrapper> },
               { path: ROUTES.DEBT_DETAIL(':id'), element: <SuspenseWrapper><DebtDetailPage /></SuspenseWrapper> },
+              { path: ROUTES.CARDS, element: <SuspenseWrapper><CardsPage /></SuspenseWrapper> },
               { path: ROUTES.FIXED_PAYMENTS, element: <SuspenseWrapper><FixedPaymentsPage /></SuspenseWrapper> },
               { path: ROUTES.GOALS, element: <SuspenseWrapper><GoalsPage /></SuspenseWrapper> },
               { path: ROUTES.GOAL_DETAIL(':id'), element: <SuspenseWrapper><GoalDetailPage /></SuspenseWrapper> },

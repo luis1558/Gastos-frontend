@@ -9,10 +9,11 @@ import { Badge } from '../../../components/ui/Badge'
 import { Loading } from '../../../components/ui/Loading'
 import { useDebts } from '../../debts/hooks'
 import { useFixedPayments } from '../../fixed-payments/hooks'
+import { useCards } from '../../cards/hooks'
 import { nextDueDate } from '../../fixed-payments/dueDate'
 import { formatCurrency, formatDate, classNames, getCurrentMonth, getCurrentYear } from '../../../utils/format'
 import { GOAL_KINDS, ROUTES } from '../../../utils/constants'
-import type { Debt, FixedPayment, GoalKind } from '../../../types/models'
+import type { Card, Debt, FixedPayment, GoalKind } from '../../../types/models'
 import { useCreateGoal, useGoals } from '../hooks'
 import { GoalKindIcon } from './GoalKindIcon'
 import { GoalFormFields, type GoalFormValues } from './GoalFormFields'
@@ -32,6 +33,7 @@ function NewGoalFlow({ onClose }: { onClose: () => void }) {
   const [kind, setKind] = useState<GoalKind | null>(null)
   const [debt, setDebt] = useState<Debt | null>(null)
   const [fixedPayment, setFixedPayment] = useState<FixedPayment | null>(null)
+  const [card, setCard] = useState<Card | null>(null)
   const createGoal = useCreateGoal()
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<GoalFormValues>({
@@ -53,6 +55,14 @@ function NewGoalFlow({ onClose }: { onClose: () => void }) {
     setValue('target_date', nextDueDate(selected.day_of_month, selected.status === 'paid'))
   }
 
+  const pickCard = (selected: Card) => {
+    setCard(selected)
+    setValue('name', `Pago: ${selected.name}`, { shouldValidate: true })
+    // The statement amount may not be written down yet; then the user types the expected amount.
+    if (selected.statement_amount) setValue('target_amount', Number(selected.statement_amount), { shouldValidate: true })
+    setValue('target_date', nextDueDate(selected.payment_day, selected.status === 'paid'))
+  }
+
   const onSubmit = (data: GoalFormValues) => {
     if (!kind) return
     createGoal.mutate(
@@ -64,13 +74,15 @@ function NewGoalFlow({ onClose }: { onClose: () => void }) {
         notes: data.notes || null,
         debt_id: kind === 'debt' ? debt?.id : null,
         fixed_payment_id: kind === 'fixed_payment' ? fixedPayment?.id : null,
+        card_id: kind === 'card' ? card?.id : null,
       },
       { onSuccess: onClose },
     )
   }
 
   const showForm =
-    kind === 'personal' || (kind === 'debt' && debt !== null) || (kind === 'fixed_payment' && fixedPayment !== null)
+    kind === 'personal' || (kind === 'debt' && debt !== null) || (kind === 'fixed_payment' && fixedPayment !== null) ||
+    (kind === 'card' && card !== null)
 
   return (
     <Modal isOpen onClose={onClose} title="Nueva meta" size="lg">
@@ -105,7 +117,7 @@ function NewGoalFlow({ onClose }: { onClose: () => void }) {
         <div className="space-y-4">
           <button
             type="button"
-            onClick={() => { setKind(null); setDebt(null); setFixedPayment(null) }}
+            onClick={() => { setKind(null); setDebt(null); setFixedPayment(null); setCard(null) }}
             className="inline-flex min-h-11 items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
           >
             <FiArrowLeft size={16} /> Cambiar tipo de meta
@@ -113,13 +125,20 @@ function NewGoalFlow({ onClose }: { onClose: () => void }) {
 
           {kind === 'debt' && <DebtPicker selectedId={debt?.id} onPick={pickDebt} />}
           {kind === 'fixed_payment' && <FixedPaymentPicker selectedId={fixedPayment?.id} onPick={pickFixedPayment} />}
+          {kind === 'card' && <CardPicker selectedId={card?.id} onPick={pickCard} />}
 
           {showForm && (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <GoalFormFields
                 register={register}
                 errors={errors}
-                amountHint={kind === 'debt' ? 'Empieza con el saldo de la deuda; cámbialo si solo quieres apartar la cuota.' : undefined}
+                amountHint={
+                  kind === 'debt'
+                    ? 'Empieza con el saldo de la deuda; cámbialo si solo quieres apartar la cuota.'
+                    : kind === 'card' && !card?.statement_amount
+                      ? 'Aún no anotas el monto de este mes: escribe cuánto esperas pagar.'
+                      : undefined
+                }
               />
               <Button type="submit" loading={createGoal.isPending} className="w-full min-h-11">
                 Crear meta
@@ -242,6 +261,79 @@ function FixedPaymentPicker({ selectedId, onPick }: { selectedId?: string; onPic
           </button>
         )
       })}
+    </div>
+  )
+}
+
+function CardPicker({ selectedId, onPick }: { selectedId?: string; onPick: (card: Card) => void }) {
+  const { data: cards, isLoading } = useCards(getCurrentYear(), getCurrentMonth())
+  // A card that already has an active goal can't get a second one.
+  const { data: activeGoals } = useGoals('active')
+  const taken = new Set((activeGoals ?? []).map((g) => g.card_id).filter(Boolean))
+  const active = (cards ?? []).filter((c) => c.is_active && !taken.has(c.id))
+  // Purchases on these cards are already expenses, so their bill is already out of the available balance.
+  const eligible = active.filter((c) => !c.tracks_purchases)
+  const trackedCount = active.length - eligible.length
+
+  if (isLoading) return <Loading />
+
+  if (eligible.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-gray-300 p-4 text-center text-sm text-gray-600 dark:border-gray-600 dark:text-gray-400">
+        <p>No tienes tarjetas disponibles para una meta.</p>
+        {trackedCount > 0 && (
+          <p className="mt-1 text-xs">
+            Las tarjetas donde registras cada compra no necesitan meta: ese dinero ya está descontado de tu disponible.
+          </p>
+        )}
+        <Link to={ROUTES.CARDS} className="mt-1 inline-block font-medium text-indigo-600 dark:text-indigo-400">
+          Ir a Tarjetas
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <div role="radiogroup" aria-label="Tarjeta" className="space-y-2">
+      <p className="text-sm font-medium text-gray-700 dark:text-gray-300">¿Para cuál tarjeta?</p>
+      {eligible.map((c) => {
+        const selected = c.id === selectedId
+        return (
+          <button
+            key={c.id}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            onClick={() => onPick(c)}
+            className={classNames(
+              'flex min-h-14 w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500',
+              selected
+                ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500 dark:bg-indigo-900/30 dark:border-indigo-400'
+                : 'border-gray-300 bg-white hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700',
+            )}
+          >
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+                {c.name}
+                {c.last_four ? ` ····${c.last_four}` : ''}
+              </p>
+              <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                paga el día {c.payment_day}
+                {c.status === 'paid' ? ' · pagada este mes' : ''}
+              </p>
+            </div>
+            <p className="shrink-0 text-sm font-semibold text-gray-900 dark:text-gray-100">
+              {c.statement_amount ? formatCurrency(Number(c.statement_amount)) : 'Monto por definir'}
+            </p>
+            {selected && <FiCheck size={18} className="shrink-0 text-indigo-600 dark:text-indigo-400" aria-hidden="true" />}
+          </button>
+        )
+      })}
+      {trackedCount > 0 && (
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          No aparecen las tarjetas donde registras cada compra: ese dinero ya está descontado de tu disponible.
+        </p>
+      )}
     </div>
   )
 }

@@ -8,6 +8,7 @@ export const ROUTES = {
   DEBTS: '/debts',
   DEBT_DETAIL: (id: string) => `/debts/${id}`,
   COUNTERPARTIES: '/debts/counterparties',
+  CARDS: '/cards',
   FIXED_PAYMENTS: '/fixed-payments',
   GOALS: '/goals',
   GOAL_DETAIL: (id: string) => `/goals/${id}`,
@@ -51,7 +52,7 @@ export const RATE_PERIODS = [
 
 export const GOAL_KINDS = [
   { value: 'debt', label: 'Préstamo', description: 'Aparta para la cuota de una deuda pendiente', available: true },
-  { value: 'card', label: 'Pago de tarjeta', description: 'Aparta para el pago de una tarjeta', available: false },
+  { value: 'card', label: 'Pago de tarjeta', description: 'Aparta para el pago de una tarjeta', available: true },
   { value: 'fixed_payment', label: 'Pago fijo', description: 'Arriendo, internet, suscripciones…', available: true },
   { value: 'personal', label: 'Algo mío', description: 'Una compra, un viaje, ahorro para lo que quieras', available: true },
 ] as const

@@ -28,7 +28,7 @@ export function GoalCard({ goal, onContribute }: GoalCardProps) {
           <GoalKindIcon kind={goal.kind} />
           <div className="min-w-0 flex-1">
             <p className="break-words font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">{goal.name}</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{goal.debt_label || kindLabel}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{goal.debt_label || goal.fixed_payment_label || kindLabel}</p>
           </div>
           {completed && <Badge color="green">Cumplida</Badge>}
         </div>

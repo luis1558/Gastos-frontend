@@ -22,6 +22,7 @@ export function useCreateExpense() {
     onSuccess: () => {
       toast.success('Gasto registrado')
       qc.invalidateQueries({ queryKey: ['expenses'] })
+      qc.invalidateQueries({ queryKey: ['goal-overview'] })
     },
     onError: () => toast.error('Error al registrar el gasto'),
   })
@@ -52,7 +53,10 @@ export function useUpdateExpense() {
       context?.snapshots?.forEach(([key, data]) => qc.setQueryData(key, data))
       toast.error('Error al actualizar el gasto')
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+      qc.invalidateQueries({ queryKey: ['goal-overview'] })
+    },
   })
 }
 
@@ -73,7 +77,10 @@ export function useDeleteExpense() {
       context?.snapshots.forEach(([key, data]) => qc.setQueryData(key, data))
       toast.error('Error al eliminar el gasto')
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ['expenses'] }),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['expenses'] })
+      qc.invalidateQueries({ queryKey: ['goal-overview'] })
+    },
   })
 }
 

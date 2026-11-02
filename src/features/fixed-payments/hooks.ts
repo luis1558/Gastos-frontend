@@ -14,7 +14,7 @@ export function useFixedPayments(year: number, month: number) {
 function useInvalidateAfterPayment() {
   const qc = useQueryClient()
   return () => {
-    for (const key of ['fixed-payments', 'expenses', 'goal-overview', 'goals', 'monthly-summary', 'yearly-summary', 'month-forecast']) {
+    for (const key of ['fixed-payments', 'alerts', 'expenses', 'goal-overview', 'goals', 'monthly-summary', 'yearly-summary', 'month-forecast']) {
       qc.invalidateQueries({ queryKey: [key] })
     }
   }
@@ -26,6 +26,7 @@ export function useCreateFixedPayment() {
     mutationFn: fixedPaymentsApi.create,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['fixed-payments'] })
+      qc.invalidateQueries({ queryKey: ['alerts'] })
       toast.success('Pago fijo creado')
     },
     onError: () => toast.error('No se pudo crear el pago fijo'),
@@ -39,6 +40,7 @@ export function useUpdateFixedPayment(year: number, month: number) {
       fixedPaymentsApi.update(id, year, month, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['fixed-payments'] })
+      qc.invalidateQueries({ queryKey: ['alerts'] })
       toast.success('Pago fijo actualizado')
     },
     onError: () => toast.error('No se pudo actualizar el pago fijo'),
@@ -51,6 +53,7 @@ export function useDeleteFixedPayment() {
     mutationFn: fixedPaymentsApi.remove,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['fixed-payments'] })
+      qc.invalidateQueries({ queryKey: ['alerts'] })
       qc.invalidateQueries({ queryKey: ['goals'] })
       toast.success('Pago fijo eliminado')
     },

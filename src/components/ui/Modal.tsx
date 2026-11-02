@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { FiX } from 'react-icons/fi'
 
 interface ModalProps {
@@ -23,7 +24,9 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
 
   if (!isOpen) return null
 
-  return (
+  // Rendered at the document root so a parent that creates its own stacking context or
+  // containing block (a fixed header, a transformed sidebar) cannot trap or hide it.
+  return createPortal(
     <div className={size === 'lg' ? 'fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4' : 'fixed inset-0 z-50 flex items-center justify-center p-4'}>
       <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={onClose} />
       <div
@@ -48,6 +51,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
         </div>
         <div className="p-4">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

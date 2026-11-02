@@ -7,6 +7,7 @@ import { FiTrendingUp, FiTrendingDown, FiDollarSign } from 'react-icons/fi'
 import { useState } from 'react'
 import { MONTH_NAMES } from '../../../utils/constants'
 import { AvailableCard } from '../../goals/components/AvailableCard'
+import { UpcomingAlerts } from '../../alerts/components/UpcomingAlerts'
 
 export function DashboardPage() {
   const [year, setYear] = useState(getCurrentYear())
@@ -46,6 +47,8 @@ export function DashboardPage() {
       </div>
 
       <AvailableCard />
+
+      <UpcomingAlerts />
 
       {summary ? (
         <>

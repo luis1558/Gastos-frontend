@@ -47,6 +47,8 @@ export interface Expense {
   description: string
   payment_method?: PaymentMethod | null
   notes?: string | null
+  card_id?: string | null
+  card_name?: string | null
   created_at: string
   updated_at: string
 }
@@ -213,6 +215,8 @@ export interface Goal {
   debt_label?: string | null
   fixed_payment_id?: string | null
   fixed_payment_label?: string | null
+  card_id?: string | null
+  card_label?: string | null
   saved_amount: number
   remaining_amount: number
   progress_percent: number
@@ -254,4 +258,34 @@ export interface FixedPayment {
   status: 'pending' | 'paid'
   paid_amount?: number | null
   paid_on?: string | null
+}
+
+export interface Card {
+  id: string
+  name: string
+  last_four?: string | null
+  payment_day: number
+  /** True when each purchase is already an expense, so paying the bill creates none. */
+  tracks_purchases: boolean
+  category_id?: string | null
+  category_name?: string | null
+  notes?: string | null
+  is_active: boolean
+  /** Due date inside the requested month (day clamped for short months). */
+  due_date: string
+  /** undefined: no amount yet · pending: amount known, not paid · paid */
+  status: 'undefined' | 'pending' | 'paid'
+  statement_amount?: number | null
+  paid_on?: string | null
+  /** Purchases registered with this card in the requested month (a hint for the statement amount). */
+  purchases_total: number
+  purchases_count: number
+}
+
+export interface CardPurchase {
+  id: string
+  expense_date: string
+  amount: number
+  description: string
+  category_name: string
 }

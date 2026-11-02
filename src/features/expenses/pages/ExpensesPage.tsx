@@ -11,10 +11,12 @@ import { Modal } from '../../../components/ui/Modal'
 import { EmptyState } from '../../../components/ui/EmptyState'
 import { Loading } from '../../../components/ui/Loading'
 import { PageHeader } from '../../../components/ui/PageHeader'
-import { formatCurrency, formatDate, getCurrentYear, getCurrentMonth } from '../../../utils/format'
+import { formatCurrency, getCurrentYear, getCurrentMonth } from '../../../utils/format'
 import { MONTH_NAMES, PAYMENT_METHODS, ROUTES } from '../../../utils/constants'
 import { AvailableWarning } from '../../goals/components/AvailableWarning'
-import { FiPlus, FiTrash2, FiSettings, FiCalendar, FiTag, FiEdit2 } from 'react-icons/fi'
+import { CardSelect } from '../../cards/components/CardSelect'
+import { ExpenseRow } from '../components/ExpenseRow'
+import { FiPlus, FiSettings } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import type { Expense } from '../../../types/models'
 
@@ -24,6 +26,7 @@ const expenseSchema = z.object({
   description: z.string().min(2, 'Mínimo 2 caracteres'),
   expense_date: z.string().min(1, 'Fecha requerida'),
   payment_method: z.string().optional(),
+  card_id: z.string().optional(),
   notes: z.string().optional(),
   period_month: z.number().int().min(1).max(12),
   period_year: z.number().int().min(2000).max(2100),
@@ -81,10 +84,15 @@ export function ExpensesPage() {
     defaultValues: { period_month: month, period_year: year },
   })
   const newAmount = useWatch({ control, name: 'amount' })
+  const newPaymentMethod = useWatch({ control, name: 'payment_method' })
 
-  const { register: registerEdit, handleSubmit: handleEditSubmit, reset: resetEdit, formState: { errors: editErrors } } = useForm<ExpenseForm>({
+  const { register: registerEdit, handleSubmit: handleEditSubmit, reset: resetEdit, control: editControl, formState: { errors: editErrors } } = useForm<ExpenseForm>({
     resolver: zodResolver(expenseSchema),
   })
+
+  const editPaymentMethod = useWatch({ control: editControl, name: 'payment_method' })
+
+  const totalSpent = (expenses ?? []).reduce((sum, e) => sum + Number(e.amount), 0)
 
   const openModal = () => {
     reset({ period_month: month, period_year: year })
@@ -99,6 +107,7 @@ export function ExpensesPage() {
       description: expense.description,
       expense_date: expense.expense_date.slice(0, 10),
       payment_method: expense.payment_method || '',
+      card_id: expense.card_id || '',
       notes: expense.notes || '',
       period_month: expense.period_month || expense.month,
       period_year: expense.period_year || expense.year,
@@ -108,7 +117,7 @@ export function ExpensesPage() {
   const onEditSubmit = (data: ExpenseForm) => {
     if (!editingExpense) return
     updateExpense.mutate(
-      { id: editingExpense.id, data: data as any },
+      { id: editingExpense.id, data: { ...data, payment_method: data.payment_method || undefined, card_id: data.payment_method === 'credit_card' && data.card_id ? data.card_id : null } as any },
       { onSuccess: () => setEditingExpense(null) },
     )
   }
@@ -121,7 +130,7 @@ export function ExpensesPage() {
   }
 
   const onSubmit = (data: ExpenseForm) => {
-    createExpense.mutate(data as any, {
+    createExpense.mutate({ ...data, card_id: data.payment_method === 'credit_card' && data.card_id ? data.card_id : undefined } as any, {
       onSuccess: () => {
         setModalOpen(false)
         reset()
@@ -172,51 +181,25 @@ export function ExpensesPage() {
       {isLoading ? (
         <Loading />
       ) : expenses && expenses.length > 0 ? (
-        <div className="space-y-3">
-          {expenses.map((expense) => (
-            <Card key={expense.id} className="flex items-center gap-4">
-              <div
-                className="w-1 h-12 rounded-full shrink-0"
-                style={{ backgroundColor: expense.category_slug === 'arriendo' ? '#6366f1' : '#94a3b8' }}
+        <>
+          <Card className="mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Gastado en {MONTH_NAMES[month].toLowerCase()}</p>
+            <p className="text-2xl font-bold text-red-600 dark:text-red-400">−{formatCurrency(totalSpent)}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{expenses.length} {expenses.length === 1 ? 'gasto' : 'gastos'}</p>
+          </Card>
+          <div className="space-y-3">
+            {expenses.map((expense) => (
+              <ExpenseRow
+                key={expense.id}
+                expense={expense}
+                onEdit={openEdit}
+                onChangeCategory={(e) => openChangeCategoryModal({ id: e.id, description: e.description, category_id: e.category_id })}
+                onMove={(e) => openMoveModal({ id: e.id, description: e.description, month: e.month, year: e.year })}
+                onDelete={(e) => setDeletingExpenseId(e.id)}
               />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{expense.description}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{expense.category_name || expense.category_slug}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(expense.amount)}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(expense.expense_date)}</p>
-              </div>
-              <button
-                onClick={() => openEdit(expense)}
-                className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors dark:hover:bg-indigo-900/30"
-                title="Editar gasto"
-              >
-                <FiEdit2 size={16} />
-              </button>
-              <button
-                onClick={() => openChangeCategoryModal({ id: expense.id, description: expense.description, category_id: expense.category_id })}
-                className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors dark:hover:bg-purple-900/30"
-                title="Cambiar categoría"
-              >
-                <FiTag size={16} />
-              </button>
-              <button
-                onClick={() => openMoveModal({ id: expense.id, description: expense.description, month: expense.month, year: expense.year })}
-                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:hover:bg-blue-900/30"
-                title="Mover a otro período"
-              >
-                <FiCalendar size={16} />
-              </button>
-              <button
-                onClick={() => setDeletingExpenseId(expense.id)}
-                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/30"
-              >
-                <FiTrash2 size={16} />
-              </button>
-            </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       ) : (
         <Card>
           <EmptyState
@@ -340,6 +323,7 @@ export function ExpensesPage() {
             placeholder="Seleccionar (opcional)"
             {...register('payment_method')}
           />
+          <CardSelect id="card_id" paymentMethod={newPaymentMethod} {...register('card_id')} />
           <Input
             id="notes"
             label="Notas (opcional)"
@@ -418,6 +402,7 @@ export function ExpensesPage() {
             placeholder="Seleccionar (opcional)"
             {...registerEdit('payment_method')}
           />
+          <CardSelect id="edit_card_id" paymentMethod={editPaymentMethod} {...registerEdit('card_id')} />
           <Input
             id="edit_notes"
             label="Notas (opcional)"

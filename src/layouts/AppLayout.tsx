@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { FiLayout, FiDollarSign, FiTrendingUp, FiPieChart, FiMenu, FiX, FiLogOut, FiUser, FiGrid, FiCreditCard, FiSun, FiMoon, FiTarget, FiRepeat } from 'react-icons/fi'
+import { FiLayout, FiDollarSign, FiTrendingUp, FiPieChart, FiMenu, FiX, FiLogOut, FiUser, FiGrid, FiCreditCard, FiSun, FiMoon, FiTarget, FiRepeat, FiLayers } from 'react-icons/fi'
 import { useAuthStore } from '../stores/authStore'
 import { useThemeStore } from '../stores/themeStore'
 import { ROUTES } from '../utils/constants'
@@ -11,6 +11,7 @@ const navItems = [
   { to: ROUTES.EXPENSES, label: 'Gastos', icon: FiDollarSign },
   { to: ROUTES.INCOMES, label: 'Ingresos', icon: FiTrendingUp },
   { to: ROUTES.DEBTS, label: 'Deudas', icon: FiCreditCard },
+  { to: ROUTES.CARDS, label: 'Tarjetas', icon: FiLayers },
   { to: ROUTES.FIXED_PAYMENTS, label: 'Pagos fijos', icon: FiRepeat },
   { to: ROUTES.GOALS, label: 'Metas', icon: FiTarget },
   { to: ROUTES.REPORTS, label: 'Reportes', icon: FiPieChart },

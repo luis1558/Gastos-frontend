@@ -11,11 +11,12 @@ import { Modal } from '../../../components/ui/Modal'
 import { EmptyState } from '../../../components/ui/EmptyState'
 import { Loading } from '../../../components/ui/Loading'
 import { PageHeader } from '../../../components/ui/PageHeader'
-import { formatCurrency, formatDate, getCurrentYear, getCurrentMonth } from '../../../utils/format'
+import { formatCurrency, getCurrentYear, getCurrentMonth } from '../../../utils/format'
 import { MONTH_NAMES, PAYMENT_METHODS, ROUTES } from '../../../utils/constants'
 import { AvailableWarning } from '../../goals/components/AvailableWarning'
 import { CardSelect } from '../../cards/components/CardSelect'
-import { FiPlus, FiTrash2, FiSettings, FiCalendar, FiTag, FiEdit2 } from 'react-icons/fi'
+import { ExpenseRow } from '../components/ExpenseRow'
+import { FiPlus, FiSettings } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import type { Expense } from '../../../types/models'
 
@@ -90,6 +91,8 @@ export function ExpensesPage() {
   })
 
   const editPaymentMethod = useWatch({ control: editControl, name: 'payment_method' })
+
+  const totalSpent = (expenses ?? []).reduce((sum, e) => sum + Number(e.amount), 0)
 
   const openModal = () => {
     reset({ period_month: month, period_year: year })
@@ -178,51 +181,25 @@ export function ExpensesPage() {
       {isLoading ? (
         <Loading />
       ) : expenses && expenses.length > 0 ? (
-        <div className="space-y-3">
-          {expenses.map((expense) => (
-            <Card key={expense.id} className="flex items-center gap-4">
-              <div
-                className="w-1 h-12 rounded-full shrink-0"
-                style={{ backgroundColor: expense.category_slug === 'arriendo' ? '#6366f1' : '#94a3b8' }}
+        <>
+          <Card className="mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Gastado en {MONTH_NAMES[month].toLowerCase()}</p>
+            <p className="text-2xl font-bold text-red-600 dark:text-red-400">−{formatCurrency(totalSpent)}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">{expenses.length} {expenses.length === 1 ? 'gasto' : 'gastos'}</p>
+          </Card>
+          <div className="space-y-3">
+            {expenses.map((expense) => (
+              <ExpenseRow
+                key={expense.id}
+                expense={expense}
+                onEdit={openEdit}
+                onChangeCategory={(e) => openChangeCategoryModal({ id: e.id, description: e.description, category_id: e.category_id })}
+                onMove={(e) => openMoveModal({ id: e.id, description: e.description, month: e.month, year: e.year })}
+                onDelete={(e) => setDeletingExpenseId(e.id)}
               />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{expense.description}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{expense.category_name || expense.category_slug}{expense.card_name ? ` · ${expense.card_name}` : ''}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(expense.amount)}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(expense.expense_date)}</p>
-              </div>
-              <button
-                onClick={() => openEdit(expense)}
-                className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors dark:hover:bg-indigo-900/30"
-                title="Editar gasto"
-              >
-                <FiEdit2 size={16} />
-              </button>
-              <button
-                onClick={() => openChangeCategoryModal({ id: expense.id, description: expense.description, category_id: expense.category_id })}
-                className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors dark:hover:bg-purple-900/30"
-                title="Cambiar categoría"
-              >
-                <FiTag size={16} />
-              </button>
-              <button
-                onClick={() => openMoveModal({ id: expense.id, description: expense.description, month: expense.month, year: expense.year })}
-                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:hover:bg-blue-900/30"
-                title="Mover a otro período"
-              >
-                <FiCalendar size={16} />
-              </button>
-              <button
-                onClick={() => setDeletingExpenseId(expense.id)}
-                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/30"
-              >
-                <FiTrash2 size={16} />
-              </button>
-            </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       ) : (
         <Card>
           <EmptyState

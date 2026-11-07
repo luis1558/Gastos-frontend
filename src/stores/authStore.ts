@@ -1,8 +1,10 @@
 import { create } from 'zustand'
 import type { User } from '../types/models'
 import type { TokenPair } from '../types/api'
+import { clearPersistedCache } from '../lib/queryClient'
 
 const REFRESH_TOKEN_KEY = 'refresh_token'
+const CACHED_USER_KEY = 'cached_user'
 
 interface AuthState {
   user: User | null
@@ -17,6 +19,23 @@ interface AuthState {
 
 function getStoredRefreshToken(): string | null {
   return localStorage.getItem(REFRESH_TOKEN_KEY)
+}
+
+function getCachedUser(): User | null {
+  try {
+    const raw = localStorage.getItem(CACHED_USER_KEY)
+    return raw ? (JSON.parse(raw) as User) : null
+  } catch {
+    return null
+  }
+}
+
+function setCachedUser(user: User | null): void {
+  if (user) {
+    localStorage.setItem(CACHED_USER_KEY, JSON.stringify(user))
+  } else {
+    localStorage.removeItem(CACHED_USER_KEY)
+  }
 }
 
 function setStoredRefreshToken(token: string | null): void {
@@ -35,6 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   setAuth: (user, tokens) => {
     setStoredRefreshToken(tokens.refresh_token)
+    setCachedUser(user)
     set({
       user,
       accessToken: tokens.access_token,
@@ -45,6 +65,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: () => {
     setStoredRefreshToken(null)
+    setCachedUser(null)
+    clearPersistedCache()
     set({
       user: null,
       accessToken: null,
@@ -82,6 +104,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       })
       if (userRes.ok) {
         const user = await userRes.json()
+        setCachedUser(user)
         set({ user, isAuthenticated: true, isLoading: false })
       } else {
         set({ isLoading: false })
@@ -89,7 +112,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       return true
     } catch {
-      get().logout()
+      // Network failure (offline): keep the session alive with the cached user so the
+      // app opens offline. Only an explicit server rejection should log the user out.
+      const cachedUser = getCachedUser()
+      if (cachedUser) {
+        set({ user: cachedUser, isAuthenticated: true, isLoading: false })
+      } else {
+        get().logout()
+      }
       return false
     }
   },

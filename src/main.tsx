@@ -2,21 +2,14 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
+import { registerSW } from 'virtual:pwa-register'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Toaster } from 'sonner'
 import { useAuthStore } from './stores/authStore'
 import { useThemeStore } from './stores/themeStore'
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 30 * 1000,
-      gcTime: 10 * 60 * 1000,
-      refetchOnWindowFocus: false,
-    },
-  },
-})
+import { queryClient, persister, CACHE_MAX_AGE } from './lib/queryClient'
+import { OfflineBanner } from './components/ui/OfflineBanner'
 
 useAuthStore.getState().initialize()
 useThemeStore.getState().initialize()
@@ -26,12 +19,26 @@ useThemeStore.getState().initialize()
 // Vite fires this event on preload failure — reloading fetches the fresh chunks.
 window.addEventListener('vite:preloadError', () => window.location.reload())
 
+registerSW({ immediate: true })
+
 createRoot(document.getElementById('root')!).render(
-  <QueryClientProvider client={queryClient}>
+  <PersistQueryClientProvider
+    client={queryClient}
+    persistOptions={{
+      persister,
+      maxAge: CACHE_MAX_AGE,
+      // Bump when the shape of cached API data changes to discard old caches
+      buster: 'v1',
+      // Writes are only queued in memory: mutationFns can't be serialized, so
+      // restoring paused mutations after a reload would fail.
+      dehydrateOptions: { shouldDehydrateMutation: () => false },
+    }}
+  >
     <StrictMode>
+      <OfflineBanner />
       <App />
       <Toaster position="bottom-right" richColors />
       <ReactQueryDevtools initialIsOpen={false} />
     </StrictMode>
-  </QueryClientProvider>,
+  </PersistQueryClientProvider>,
 )

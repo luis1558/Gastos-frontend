@@ -14,9 +14,12 @@
     "@lineiconshq/free-icons": "^1.0.6",
     "@lineiconshq/react-lineicons": "^1.0.5",
     "@tailwindcss/vite": "^4.3.0",
-    "@tanstack/react-query": "^5.100.9",
-    "@tanstack/react-query-devtools": "^5.100.9",
+    "@tanstack/query-async-storage-persister": "^5.106.1",
+    "@tanstack/react-query": "^5.106.1",
+    "@tanstack/react-query-devtools": "^5.106.1",
+    "@tanstack/react-query-persist-client": "^5.106.1",
     "@visx/visx": "^3.12.0",
+    "idb-keyval": "^6.3.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-hook-form": "^7.75.0",
@@ -46,6 +49,8 @@
     "globals": "^17.5.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
-    "vite": "^8.0.10"
+    "vite": "^8.0.10",
+    "vite-plugin-pwa": "^2.0.0",
+    "workbox-window": "^7.4.1"
   }
 }

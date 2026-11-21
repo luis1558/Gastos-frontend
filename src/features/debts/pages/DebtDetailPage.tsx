@@ -110,7 +110,8 @@ export function DebtDetailPage() {
           counterparty_id: data.counterparty_id,
           ...(amountLocked ? {} : { original_amount: data.original_amount }),
           description: data.description,
-          due_date: data.due_date || undefined,
+          // null clears an existing due date; undefined would keep it.
+          due_date: data.due_date || null,
           notes: data.notes || undefined,
         },
       },

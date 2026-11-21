@@ -41,6 +41,7 @@ export function useUpdateDebt() {
       qc.invalidateQueries({ queryKey: ['debts'] })
       qc.invalidateQueries({ queryKey: ['alerts'] })
       qc.invalidateQueries({ queryKey: ['debt'] })
+      qc.invalidateQueries({ queryKey: ['debt-summary'] })
     },
   })
 }

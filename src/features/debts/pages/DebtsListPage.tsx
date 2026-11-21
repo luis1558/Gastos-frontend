@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -16,7 +16,7 @@ import { ChoiceCards } from '../../../components/ui/ChoiceCards'
 import { PageHeader } from '../../../components/ui/PageHeader'
 import { formatCurrency, todayLocalDate } from '../../../utils/format'
 import { DEBT_TYPES, DEBT_STATUSES, DEBT_DIRECTIONS, ROUTES } from '../../../utils/constants'
-import { FiPlus, FiUsers, FiArrowRight } from 'react-icons/fi'
+import { FiPlus, FiUsers, FiArrowRight, FiSearch } from 'react-icons/fi'
 import { InterestFields } from '../components/InterestFields'
 import { formatRate, interestTypeLabel } from '../interest'
 import type { Debt } from '../../../types/models'
@@ -41,6 +41,9 @@ const debtSchema = z.object({
 
 type DebtForm = z.infer<typeof debtSchema>
 
+// Paid and cancelled debts stay hidden until the user selects them.
+const DEFAULT_STATUS_FILTER = ['pending', 'partially_paid']
+
 const emptyForm = (): Partial<DebtForm> => ({
   type: 'payable',
   origin_date: todayLocalDate(),
@@ -56,10 +59,25 @@ function describeInterest(debt: Debt): string | null {
 
 export function DebtsListPage() {
   const [filterType, setFilterType] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
+  const [filterStatuses, setFilterStatuses] = useState<string[]>(DEFAULT_STATUS_FILTER)
+  const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
 
-  const { data: debts, isLoading } = useDebts(filterType || undefined, filterStatus || undefined)
+  const { data: allDebts, isLoading } = useDebts(filterType || undefined)
+  const debts = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    return (allDebts || []).filter((debt) =>
+      (filterStatuses.length === 0 || filterStatuses.includes(debt.status)) &&
+      (!term ||
+        (debt.counterparty_name || '').toLowerCase().includes(term) ||
+        (debt.description || '').toLowerCase().includes(term)),
+    )
+  }, [allDebts, filterStatuses, search])
+
+  const toggleStatus = (status: string) =>
+    setFilterStatuses((current) =>
+      current.includes(status) ? current.filter((s) => s !== status) : [...current, status],
+    )
   const { data: summary } = useDebtSummary()
   const { data: counterparties } = useCounterparties()
   const createDebt = useCreateDebt()
@@ -130,28 +148,52 @@ export function DebtsListPage() {
         </div>
       )}
 
-      <div className="flex gap-2 mb-6">
-        <select
-          value={filterType}
-          onChange={(e) => setFilterType(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 w-40"
-        >
-          <option value="">Todos</option>
-          {DEBT_TYPES.map((t) => (<option key={t.value} value={t.value}>{t.label}</option>))}
-        </select>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 w-40"
-        >
-          <option value="">Todos</option>
-          {DEBT_STATUSES.map((s) => (<option key={s.value} value={s.value}>{s.label}</option>))}
-        </select>
+      <div className="flex flex-col gap-3 mb-6">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
+            <FiSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por nombre o concepto"
+              aria-label="Buscar deudas"
+              className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+            />
+          </div>
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+            aria-label="Filtrar por tipo"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 sm:w-40"
+          >
+            <option value="">Todos</option>
+            {DEBT_TYPES.map((t) => (<option key={t.value} value={t.value}>{t.label}</option>))}
+          </select>
+        </div>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrar por estado">
+          {DEBT_STATUSES.map((s) => {
+            const active = filterStatuses.includes(s.value)
+            return (
+              <button
+                key={s.value}
+                type="button"
+                aria-pressed={active}
+                onClick={() => toggleStatus(s.value)}
+                className={`rounded-full border px-3 py-1 text-sm font-medium transition-colors ${active
+                  ? 'border-indigo-600 bg-indigo-600 text-white dark:border-indigo-500 dark:bg-indigo-500'
+                  : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'}`}
+              >
+                {s.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {isLoading ? (
         <Loading />
-      ) : debts && debts.length > 0 ? (
+      ) : debts.length > 0 ? (
         <div className="space-y-3">
           {debts.map((debt) => (
             <Link key={debt.id} to={ROUTES.DEBT_DETAIL(debt.id)}>
@@ -176,6 +218,10 @@ export function DebtsListPage() {
             </Link>
           ))}
         </div>
+      ) : allDebts && allDebts.length > 0 ? (
+        <Card>
+          <EmptyState title="Sin resultados" description="Ninguna deuda coincide con los filtros o la búsqueda" />
+        </Card>
       ) : (
         <Card>
           <EmptyState

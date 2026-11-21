@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
+import { toast } from 'sonner'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useDebt, usePayments, useCreatePayment, useRateChanges, useCreateRateChange, useDeleteRateChange } from '../hooks'
+import { useDebt, useUpdateDebt, useCounterparties, usePayments, useCreatePayment, useRateChanges, useCreateRateChange, useDeleteRateChange } from '../hooks'
 import { useCategories } from '../../expenses/hooks'
 import { Card } from '../../../components/ui/Card'
 import { Button } from '../../../components/ui/Button'
@@ -12,9 +13,10 @@ import { Select } from '../../../components/ui/Select'
 import { Modal } from '../../../components/ui/Modal'
 import { Badge } from '../../../components/ui/Badge'
 import { Loading } from '../../../components/ui/Loading'
+import { ChoiceCards } from '../../../components/ui/ChoiceCards'
 import { formatCurrency, formatDate, todayLocalDate } from '../../../utils/format'
-import { DEBT_STATUSES, ROUTES } from '../../../utils/constants'
-import { FiArrowLeft, FiPlus, FiTrash2 } from 'react-icons/fi'
+import { DEBT_STATUSES, DEBT_DIRECTIONS, ROUTES } from '../../../utils/constants'
+import { FiArrowLeft, FiEdit2, FiPlus, FiTrash2 } from 'react-icons/fi'
 import { formatRate, interestTypeLabel, rateTypeLabel } from '../interest'
 
 const paymentSchema = z.object({
@@ -33,10 +35,22 @@ const rateChangeSchema = z.object({
 
 type RateChangeForm = z.infer<typeof rateChangeSchema>
 
+const editSchema = z.object({
+  type: z.enum(['receivable', 'payable']),
+  counterparty_id: z.string().min(1, 'Selecciona una contraparte'),
+  original_amount: z.number({ message: 'Ingresa un monto' }).positive('Monto debe ser mayor a 0'),
+  description: z.string().min(2, 'Mínimo 2 caracteres'),
+  due_date: z.string().optional(),
+  notes: z.string().optional(),
+})
+
+type EditForm = z.infer<typeof editSchema>
+
 export function DebtDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [modalOpen, setModalOpen] = useState(false)
   const [rateModalOpen, setRateModalOpen] = useState(false)
+  const [editModalOpen, setEditModalOpen] = useState(false)
 
   const { data: debt, isLoading } = useDebt(id!)
   const { data: payments } = usePayments(id!)
@@ -46,6 +60,10 @@ export function DebtDetailPage() {
   const { data: rateChanges } = useRateChanges(id!, !!isVariable)
   const createRateChange = useCreateRateChange(id!)
   const deleteRateChange = useDeleteRateChange(id!)
+  const updateDebt = useUpdateDebt()
+  const { data: counterparties } = useCounterparties()
+  const editForm = useForm<EditForm>({ resolver: zodResolver(editSchema) })
+  const editType = useWatch({ control: editForm.control, name: 'type' })
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<PaymentForm>({
     resolver: zodResolver(paymentSchema),
@@ -66,6 +84,42 @@ export function DebtDetailPage() {
     createRateChange.mutate(data, {
       onSuccess: () => { setRateModalOpen(false); rateForm.reset({ effective_date: todayLocalDate() }) },
     })
+  }
+
+  const openEdit = () => {
+    if (!debt) return
+    editForm.reset({
+      type: debt.type as EditForm['type'],
+      counterparty_id: debt.counterparty_id,
+      original_amount: Number(debt.original_amount),
+      description: debt.description,
+      due_date: debt.due_date || '',
+      notes: debt.notes || '',
+    })
+    setEditModalOpen(true)
+  }
+
+  const onSubmitEdit = (data: EditForm) => {
+    // A paid debt keeps its amount; the backend rejects changing it too.
+    const amountLocked = debt?.status === 'paid'
+    updateDebt.mutate(
+      {
+        id: id!,
+        data: {
+          type: data.type,
+          counterparty_id: data.counterparty_id,
+          ...(amountLocked ? {} : { original_amount: data.original_amount }),
+          description: data.description,
+          // null clears an existing due date; undefined would keep it.
+          due_date: data.due_date || null,
+          notes: data.notes || undefined,
+        },
+      },
+      {
+        onSuccess: () => { setEditModalOpen(false); toast.success('Deuda actualizada') },
+        onError: () => toast.error('No se pudo actualizar la deuda. Revisa que el monto no sea menor a lo ya pagado.'),
+      },
+    )
   }
 
   if (isLoading) return <Loading />
@@ -97,7 +151,14 @@ export function DebtDetailPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{debt.description}</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">{debt.counterparty_name}</p>
         </div>
-        <Badge color={statusColor}>{DEBT_STATUSES.find((s) => s.value === debt.status)?.label || debt.status}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge color={statusColor}>{DEBT_STATUSES.find((s) => s.value === debt.status)?.label || debt.status}</Badge>
+          {debt.status !== 'cancelled' && (
+            <Button size="sm" variant="secondary" onClick={openEdit}>
+              <FiEdit2 size={16} className="mr-1" /> Editar
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
@@ -323,6 +384,58 @@ export function DebtDetailPage() {
           />
           <Button type="submit" loading={createRateChange.isPending} className="w-full">
             Guardar cambio
+          </Button>
+        </form>
+      </Modal>
+      <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} title="Editar deuda" size="lg">
+        <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="space-y-4">
+          <ChoiceCards
+            label="¿Qué tipo de deuda es?"
+            value={editType}
+            options={DEBT_DIRECTIONS}
+            onChange={(value) => editForm.setValue('type', value, { shouldValidate: true })}
+          />
+          <Select
+            id="edit_counterparty_id"
+            label="Contraparte"
+            options={(counterparties || []).map((c) => ({ value: c.id, label: c.name }))}
+            placeholder="Seleccionar"
+            error={editForm.formState.errors.counterparty_id?.message}
+            {...editForm.register('counterparty_id')}
+          />
+          <div>
+            <Input
+              id="edit_original_amount"
+              label="Monto"
+              type="number"
+              step="0.01"
+              disabled={debt.status === 'paid'}
+              error={editForm.formState.errors.original_amount?.message}
+              {...editForm.register('original_amount', { valueAsNumber: true })}
+            />
+            {debt.status === 'paid' && (
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">La deuda ya está pagada: el monto no se puede editar.</p>
+            )}
+          </div>
+          <Input
+            id="edit_description"
+            label="Descripción"
+            error={editForm.formState.errors.description?.message}
+            {...editForm.register('description')}
+          />
+          <Input
+            id="edit_due_date"
+            label="Fecha de vencimiento (opcional)"
+            type="date"
+            {...editForm.register('due_date')}
+          />
+          <Input
+            id="edit_notes"
+            label="Notas (opcional)"
+            {...editForm.register('notes')}
+          />
+          <Button type="submit" loading={updateDebt.isPending} className="w-full">
+            Guardar cambios
           </Button>
         </form>
       </Modal>

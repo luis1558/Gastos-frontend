@@ -69,11 +69,16 @@ export function ForecastCard({ year, month }: { year: number; month: number }) {
   const monthPct = daysInMonth > 0 ? Math.round((daysElapsed / daysInMonth) * 100) : 0
   const spendPct = projectedExpenses > 0 ? Math.round((totalSpent / projectedExpenses) * 100) : 0
   const spendBarWidth = Math.min(spendPct, 100)
+  // Variable spending is projected linearly, so comparing it with the month
+  // progress always matches. The yellow warning instead uses the pace against
+  // last month, which the backend computes on variable spending only; committed
+  // payments (rent, cards, debts) made early in the month never trigger it.
+  const fasterThanLastMonth = pacePct !== null && pacePct > 10
 
   let badge: string
   if (projectedBalance < 0) {
     badge = '🔴 Vas a pasarte'
-  } else if (spendPct > monthPct + 10) {
+  } else if (fasterThanLastMonth) {
     badge = '🟡 Ojo al ritmo'
   } else {
     badge = '🟢 En camino'

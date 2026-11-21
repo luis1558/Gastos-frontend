@@ -27,6 +27,22 @@ export function useMonthForecast(year: number, month: number) {
   })
 }
 
+export function useCategoryTrend(year: number) {
+  return useQuery({
+    queryKey: ['category-trend', year],
+    queryFn: () => reportsApi.categoryTrend(year),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useSpendingBreakdown(year: number, month: number) {
+  return useQuery({
+    queryKey: ['spending-breakdown', year, month],
+    queryFn: () => reportsApi.spendingBreakdown(year, month),
+    placeholderData: keepPreviousData,
+  })
+}
+
 export function useRecurringExpenses() {
   return useQuery({
     queryKey: ['recurring-expenses'],

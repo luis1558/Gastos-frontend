@@ -6,13 +6,15 @@ import { useAlerts } from '../hooks'
 import { ALERT_WINDOW_DAYS } from '../api'
 import { AlertList } from './AlertList'
 import { AlertsPanel } from './AlertsPanel'
+import { BlockError } from '../../dashboard/components/BlockError'
 
 const PREVIEW_COUNT = 4
 
 /** Dashboard block with the closest due dates, so they are seen without opening the bell. */
 export function UpcomingAlerts() {
   const [panelOpen, setPanelOpen] = useState(false)
-  const { data } = useAlerts()
+  const { data, isError, refetch } = useAlerts()
+  if (isError && !data) return <BlockError title="Próximos vencimientos" onRetry={() => refetch()} className="mb-6" />
   if (!data) return null
 
   if (data.items.length === 0) {

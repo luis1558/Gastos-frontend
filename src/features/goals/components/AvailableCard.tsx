@@ -4,10 +4,12 @@ import { Card } from '../../../components/ui/Card'
 import { formatCurrency } from '../../../utils/format'
 import { ROUTES } from '../../../utils/constants'
 import { useGoalOverview } from '../hooks'
+import { BlockError } from '../../dashboard/components/BlockError'
 
 /** Spendable money right now: everything you have minus what is set aside in goals. */
 export function AvailableCard() {
-  const { data: overview } = useGoalOverview()
+  const { data: overview, isError, refetch } = useGoalOverview()
+  if (isError && !overview) return <BlockError title="Disponible para gastar" onRetry={() => refetch()} className="mb-6" />
   if (!overview) return null
 
   const available = Number(overview.available)
